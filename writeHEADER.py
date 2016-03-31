@@ -19,7 +19,7 @@ def makeHeader(chemfile, headername=None, writevals=True, returnvals=False):
 
     if writevals:
 
-        # Only do this if we want to write.
+        # Only do this if we want to write to file.
 
         def getHeaderString(array, name):
             tosave = 'const static double %s[%d] = {' % (name, array.size)
