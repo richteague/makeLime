@@ -269,8 +269,8 @@ void
 velocity(double x, double y, double z, double *velocity){
 
     // Assume standard Keplerian rotation. 
-    velocity[0] = sqrt(6.67e-11 * MSTAR * 2e30 / sqrt(x*x + y*y))*sin(atan2(y,x));
-    velocity[1] = -sqrt(6.67e-11 * MSTAR * 2e30 / sqrt(x*x + y*y))*cos(atan2(y,x));
+    velocity[0] = sqrt(6.67e-11 * MSTAR * 2e30 / sqrt(x*x + y*y + z*z))*sin(atan2(y,x));
+    velocity[1] = -sqrt(6.67e-11 * MSTAR * 2e30 / sqrt(x*x + y*y + z*z))*cos(atan2(y,x));
     velocity[2] = 0.0;    
     
 }
