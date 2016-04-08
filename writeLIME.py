@@ -59,7 +59,7 @@ def inputparameters(pIntensity, sinkPoints, dustfile, molfile, antialias,
 
 # Write a model.c file for LIME. 
 def generateModelFile(chemheader, fileout, transitions, stellarmass, rin,
-                      rout, ncells, mass, pIntensity, sinkPoints,
+                      rout, ncells, mach, pIntensity, sinkPoints,
                       dustfile, antialias, lte_only, blend, nchan,
                       velres, pxls, imgres, thetas, phi, distance, unit,
                       collisionfile, modelfile='model_template.c'):
