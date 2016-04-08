@@ -1,41 +1,44 @@
-# All the functions to write a LIME file.
+import fileinput
 
+# All the functions to write a LIME file.
 
 def imageblock(nimg, nchan, velres, trans, pxls, imgres, theta,
                phi, distance, unit, filename=None):
-
+    
     # Write an image block with the given parameters.
     # Make sure that 'nimg' is unique per model file!
-
-    if filename is None:
-        filename = 'model_%d' % nimg
+    
+    if filename == None:
+        filename = 'model'
     elif filename[-5:] == '.fits':
         filename = filename[:-5]
-
+    filename += '_%.3f_%d' % (theta, trans)
+    
     lines = ['' for i in range(10)]
     lines[0] = 'img[%.0f].nchan = %.0f;' % (nimg, nchan)
     lines[1] = 'img[%.0f].velres = %.0f;' % (nimg, velres)
     lines[2] = 'img[%.0f].trans = %.0f;' % (nimg, trans)
     lines[3] = 'img[%.0f].pxls = %.0f;' % (nimg, pxls)
     lines[4] = 'img[%.0f].imgres = %.3f;' % (nimg, imgres)
-    lines[5] = 'img[%.0f].theta = %.3f;' % (nimg, theta)
-    lines[6] = 'img[%.0f].phi = %.3f;' % (nimg, phi)
+    lines[5] = 'img[%.0f].theta = %.3f;' % (nimg, theta) 
+    lines[6] = 'img[%.0f].phi = %.3f;' %  (nimg, phi)
     lines[7] = 'img[%.0f].distance = %.1f*PC;' % (nimg, distance)
     lines[8] = 'img[%.0f].unit = %.0f;' % (nimg, unit)
-    lines[9] = 'img[%.0f].filename = "%s.fits";' % (nimg, filename)
+    lines[9] = 'img[%.0f].filename = "%s.fits";' % (nimg, filename)   
     toinsert = ''
     for line in lines:
         toinsert += line + '\n'
     return toinsert
-
-
+    
+    
+    
 def inputparameters(pIntensity, sinkPoints, dustfile, molfile, antialias,
                     lte_only, blend, rin, rout):
 
     # Write the input parameters block for the model file.
     # rin and rout are the minimum and maximum (polar) radial points
-    # from the chemical model.
-
+    # from the chemical model.    
+    
     lines = ['' for i in range(10)]
     lines[0] = 'par->radius = %.2f*AU;' % (rout)
     lines[1] = 'par->minScale = %.2f*AU;' % (rin)
@@ -47,25 +50,25 @@ def inputparameters(pIntensity, sinkPoints, dustfile, molfile, antialias,
     lines[7] = 'par->sampling = 2;'
     lines[8] = 'par->lte_only = %.0f;' % (lte_only)
     lines[9] = 'par->blend = %.0f;' % (blend)
-
+    
     toinsert = ''
     for line in lines:
         toinsert += line + '\n'
-
+    
     return toinsert
 
-
-def generateModelFile(chemheader, fileout, transitions, stellarmass, rin, rout,
-                      ncells, pIntensity, sinkPoints, dustfile, antialias,
-                      lte_only, blend, nchan, velres, pxls, imgres, thetas,
-                      phi, distance, unit, collisionfile,
-                      modelfile='model_template.c'):
-
+# Write a model.c file for LIME. 
+def generateModelFile(chemheader, fileout, transitions, stellarmass, rin,
+                      rout, ncells, mass, pIntensity, sinkPoints,
+                      dustfile, antialias, lte_only, blend, nchan,
+                      velres, pxls, imgres, thetas, phi, distance, unit,
+                      collisionfile, modelfile='model_template.c'):
+                      
     # Read in the template with which to generate the model.c file.
     # Make sure this template is in your directory.
     with open(modelfile) as f:
         template = f.readlines()
-
+        
     # Write the stellar mass for the Keplerian rotation.
     if chemheader[-2:] == '.h':
         chemheader = chemheader[:-2]
@@ -73,14 +76,14 @@ def generateModelFile(chemheader, fileout, transitions, stellarmass, rin, rout,
         parsedline = ''.join(line.split())
         if parsedline.startswith('//ChemicalModel'):
             template.insert(l+1, '#include "%s.h"' % chemheader)
-            break
-
+            break    
+        
     # Write the stellar mass for the Keplerian rotation.
     for l, line in enumerate(template):
         parsedline = ''.join(line.split())
         if parsedline.startswith('//StellarMass'):
             template.insert(l+1, '#define MSTAR %.2f' % stellarmass)
-            break
+            break    
 
     # Include the number of grid cells for the findcell() function.
     for l, line in enumerate(template):
@@ -88,21 +91,29 @@ def generateModelFile(chemheader, fileout, transitions, stellarmass, rin, rout,
         if parsedline.startswith('//GridCells'):
             template.insert(l+1, '#define NCELLS %.d\n' % ncells)
             break
-
+            
+    # Define the mach number for the turbulent broadening.
+    for l, line in enumerate(template):
+        parsedline = ''.join(line.split())
+        if parsedline.startswith('//Mach'):
+            template.insert(l+1, '#define MACH %.3f\n' % mach)
+            break
+   
     # Radiative transfer properties.
     for l, line in enumerate(template):
         parsedline = ''.join(line.split())
         if parsedline.startswith('//InputParameters'):
             template.insert(l+1, inputparameters(pIntensity,
-                                                 sinkPoints,
+                                                 sinkPoints, 
                                                  dustfile,
-                                                 collisionfile,
-                                                 antialias,
-                                                 lte_only,
+                                                 collisionfile, 
+                                                 antialias, 
+                                                 lte_only, 
                                                  blend,
                                                  rin,
                                                  rout))
             break
+    
 
     # For each transition and inclination specified, add in an image block.
     for i, theta in enumerate(thetas):
@@ -111,25 +122,25 @@ def generateModelFile(chemheader, fileout, transitions, stellarmass, rin, rout,
             for l, line in enumerate(template):
                 parsedline = ''.join(line.split())
                 if parsedline.startswith('//%0.f' % nimg):
-                    template.insert(l+1, imageblock(nimg,
+                    template.insert(l+1, imageblock(nimg, 
                                                     nchan,
-                                                    velres,
-                                                    trans,
+                                                    velres, 
+                                                    trans, 
                                                     pxls,
-                                                    imgres,
-                                                    theta,
-                                                    phi,
-                                                    distance,
+                                                    imgres, 
+                                                    theta, 
+                                                    phi, 
+                                                    distance, 
                                                     unit))
                     template.insert(l+2, '// %.0f\n' % (nimg+1))
                     break
-
+    
     # Save as a model.c file to run.
     # Remove the '.c' if it has been added.
     if fileout[-2:] == '.c':
         fileout = fileout[:-2]
     with open('%s.c' % fileout, "w") as tempfile:
         for line in template:
-            tempfile.write("%s" % line)
-
+            tempfile.write("%s" % line)       
+                                                
     return
