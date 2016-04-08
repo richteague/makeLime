@@ -20,6 +20,8 @@
 
 // Stellar Mass
 
+// Mach
+
 // Grid Cells
 
 void input(inputPars *par, image *img)
@@ -186,7 +188,9 @@ void abundance(double x, double y, double z, double *abundance)
 
 void doppler(double x, double y, double z, double *doppler)
 {
-    *doppler = 50.;
+    double val[2];
+    temperature(x, y, z, val[2]);
+    *doppler = MACH * sqrt(KBOLTZ * val[0] / 2.34 / AMU);
 }
 
 void gasIIdust(double x, double y, double z, double *gtd)
