@@ -1,58 +1,58 @@
+import fileinput
 import numpy as np
 import scipy.constants as sc
 
-# Create a header file for a LIME model.c file. Assumes Dima's output.
+# Create a header file for a LIME model.c file.
+def makeHeader(chemfile, name=None, opr=1., headervals=None):
 
+    # Default file formatting.
+    if headervals is None:
+        headervals = np.array(['rvals', 'zvals', 'dens', 'temp', 
+                               'dtemp', 'size', 'd2g', 'abund'])
 
-def makeHeader(chemfile, headername=None, writevals=True, returnvals=False):
-
-    # Format the data into LIME appropriate units.
-    # If returnvals == True then return NCELLS, RIN and ROUT.
-
+    # Read in the data.
     with np.errstate(divide='ignore'):
         data = np.loadtxt(chemfile, skiprows=3).T
-        data[2] /= 2.33 * sc.m_p * 1e3 / 2.
-        data[7] = np.where(data[2] != 0.0, data[7]/data[2], 0.0)
-        data[2] *= 1e6
-        data[6] = np.where(data[6] != 0.0, 1./data[6], 100.)
-        data = np.where(~np.isfinite(data), 0.0, data)
 
-    if writevals:
+    # Manipulate the data into LIME format.        
+    arrname = ['rvals', 'zvals', 'dens', 'temp', 'dtemp', 'abund', 'g2d']
+    towrite = np.zeros((len(arrname),data.shape[1]))    
+    towrite[0] = data[headervals == 'rvals'][0]
+    towrite[1] = data[headervals == 'zvals'][0]
+    towrite[2] = data[headervals == 'dens'][0] * 1e3 / sc.m_p / 2.35
+    towrite[3] = data[headervals == 'temp'][0]
+    towrite[4] = data[headervals == 'dtemp'][0]
+    towrite[5] = data[headervals == 'abund'][0] * opr * 1e6 / towrite[2]
+    towrite[6] = data[headervals == 'd2g'][0]**-1.
+    towrite[6] = np.where(towrite[6] < 50., 50., towrite[6])
 
-        # Only do this if we want to write to file.
+    # Mask all the infinite values and all values where there is no density.
+    towrite = np.where(np.isfinite(towrite), towrite, 0.)
+    for i in range(3,7):
+        towrite[i] = np.where(towrite[2] > 0., towrite[i], 0.)
 
-        def getHeaderString(array, name):
-            tosave = 'const static double %s[%d] = {' % (name, array.size)
-            for val in array:
-                tosave += '%.3e, ' % val
-            tosave = tosave[:-2] + '};\n'
-            return tosave
+    # Function to write the headers.
+    def getHeaderString(array, name):
+        tosave = 'const static double %s[%d] = {' % (name, array.size)
+        for val in array:
+            tosave += '%.3e, ' % val
+        tosave = tosave[:-2] + '};\n'
+        return tosave
 
-        # Make sure these are the same as in the template file.
-        # Note that we skip the average grainsize array.
+    # Write all the arrays as a C array.    
+    hstring = ''
+    for i, array in enumerate(towrite):
+        hstring += getHeaderString(array, arrname[i])
+            
+    # Write the output file.
+    if name == None:
+        name = chemfile[:-4]
+    elif name[-2:] == '.h':
+        name = name[:-2]
+    with open('%s.h' % name, 'w') as hfile:
+        hfile.write('%s' % hstring)
+    
+    print 'Written file to %s.h, have fun!' % name
 
-        arrnames = ['rvals', 'zvals', 'dens', 'temp', 'dtemp',
-                    'size', 'gastodust', 'abund']
-        hstring = ''
-        for i, array in enumerate(data):
-            if i == 5:
-                continue
-            else:
-                hstring += getHeaderString(array, arrnames[i])
+    return 
 
-        # Write the output file.
-
-        if headername is None:
-            headername = chemfile[:-4]
-        elif headername[-2:] == '.h':
-            headername = headername[:-2]
-        with open('%s.h' % headername, 'w') as hfile:
-            hfile.write('%s' % hstring)
-
-    if returnvals is False:
-        return
-    else:
-        rmin = np.hypot(data[0], data[1]).min()
-        rmax = np.hypot(data[0], data[1]).max()
-        ncells = data[0].size
-        return ncells, rmin, rmax
