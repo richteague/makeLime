@@ -1,15 +1,19 @@
 import fileinput
 import numpy as np
 
-# All the functions to write a LIME file.
+# Functions to write a model.c file for LIME.
+# Use in conjunction with scriptLIME.py.
+
 
 def valsfromheader(headername):
 
-    # Assumes that rvals is the first line and zvals is the second.
+    # Reads the inner and outer radial points to define LIME's 
+    # computational domain. Reads in the number of cells for the
+    # interpolate routine. Assumes that rvals is the first line 
+    # and zvals is the second.
 
     with open('../'+headername) as f:
         header = f.readlines()
-
     i = 18
     while header[0][i] != ']':
         if header[0][i] == '[':
@@ -29,15 +33,21 @@ def valsfromheader(headername):
     while header[1][i] != ',':
         i -= 1
     rout = np.hypot(float(header[1][i+2:-3]), rout)
-
     return rin, rout, ncells
 
 def arrsfromheader(headername):
+    
+    # Reads the array names from the header file.
+    # Calls the parsename() function for each array in the header.
+    
     with open('../'+headername) as f:
         header = f.readlines()
     return np.array([parsename(line) for line in header])
 
 def parsename(line):
+    
+    # Parses the name from a C array declaration.
+    
     i = 0
     while line[i] != '[':
         i += 1
@@ -50,6 +60,7 @@ def imageblock(model, nimg, nchan, velres, trans, pxls, imgres, theta,
                phi, distance, unit):
     
     # Write an image block with the given parameters.
+    
     # Make sure that 'nimg' is unique per model file!
     filename = '%s_%.3f_%d' % (model, theta, trans)
     
