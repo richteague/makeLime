@@ -88,20 +88,31 @@ def runModels(chemheader, fileout, transitions, stellarmass, mach,
         time.sleep(60*remaining)
     print 'All instances complete.'
     
-    # Average all the files with the same transition.
-    # Implement something which calculates the standard devitation of
-    # the models so we know what the averaging has done.
+    # If nmodels > 1, average all the files with the same transition.
+    # Calculate a cube of the standard deviations from the model. This
+    # can be used to estimate the Monte Carlo noise.
 
-    for t in transitions:
-        for i in thetas:
-            readdata = np.array([fits.getdata('%d_%.3f_%d.fits' % (m, i, t), 0)
-                                 for m in range(nmodels)])
-            averaged = np.average(readdata, axis=0)          
-            hdulist = fits.open('0_%.3f_%d.fits' % (i,t))
-            hdulist[0].data = averaged
-            hdulist.writeto(fileout+'_%.3f_%d.fits' % (i, t))
-            os.system('mv %s_%.3f_%d.fits ../' % (fileout, i, t))
-            np.save('../%s_%.3f_%d_stddev' % (fileout, i, t), averaged)
+    if nmodels > 1:
+        for t in transitions:
+            for i in thetas:
+                readdata = np.array([fits.getdata('%d_%.3f_%d.fits' % (m, i, t), 0)
+                                     for m in range(nmodels)])
+                averaged = np.average(readdata, axis=0)
+                hdulist = fits.open('0_%.3f_%d.fits' % (i,t))
+                hdulist[0].data = averaged
+                hdulist.writeto(fileout+'_%.3f_%d.fits' % (i, t))
+                os.system('mv %s_%.3f_%d.fits ../' % (fileout, i, t))
+                dispersion = np.std(readdata, axis=0)
+                hdulist = fits.open('0_%.3f_%d.fits' % (i,t))
+                hdulist[0].data = dispersion
+                hdulist.writeto(fileout+'_%.3f_%d_noise.fits' % (i, t))
+                os.system('mv %s_%.3f_%d_noise.fits ../' % (fileout, i, t))
+                print 'Average noise for inc = %.3f and transition = %d is: %.2f' % (i, t, dispersion.mean())
+                print 'Averaging over %d models reduces this to: %.2f' % (dispersion.mean()/np.sqrt(nmodels))
+                print '\n'
+    else:
+        for t in transitions:
+            os.system('mv 0_%.3f_%d.fits ../%s+%.3f_%d.fits' % (i, t, fileout, i, t))
 
     # Exit the folder and delete it and everything in it.
     
@@ -109,6 +120,7 @@ def runModels(chemheader, fileout, transitions, stellarmass, mach,
     os.system('rm -rf %s' % foldername)
 
     # Print the total time.
+
     totaltime = time.time() - t0
     if totaltime < 60.:
         print 'Finished in %.2f seconds.' % totaltime
