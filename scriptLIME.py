@@ -13,7 +13,7 @@ import writeLIME as wl
 #   b) reduce the Monte-Carlo noise.
 # We can include an ortho / para ratio for the H2 (main collisional
 # partner). This is NOT YET passed to wrieLIME which takes this into
-# account.
+# account. It is specified such that: orthoratio = n(oH2) / n(H2).
 
 
 def runModels(chemheader, fileout, transitions, stellarmass, mach,
@@ -21,22 +21,19 @@ def runModels(chemheader, fileout, transitions, stellarmass, mach,
               nchan, velres, pxls, imgres, thetas, phi, distance, unit,
               datfile, nmodels=1, modelfile='model_template.c',
               dustfile=None, orthoratio=None, equaltemp=True):
-              
-    # Note that orthoratio = n(oH2) / n(H2).
-    # If specified, make sure the collisional rate
-    # file is set up appropriately!
+
+    # Time the duration of run to print out at the end.
     
-    # Time the duration of running.
     t0 = time.time()
     print 'Running: ', chemheader
     
     # Make sure there are no negative models.
-    
+
     nmodels = max(1,nmodels)
 
     # Create a temporary folder to work in.
     # We clean this up once finished.
-    
+
     foldername = 'tempfolder'
     if not os.path.isdir(foldername):
         os.makedirs(foldername)
@@ -48,21 +45,18 @@ def runModels(chemheader, fileout, transitions, stellarmass, mach,
         os.makedirs(foldername)
     os.chdir(foldername)
 
-    # Import the chemistry header file.
-    os.system('cp ../%s .' % chemheader)
+    # Import the chemistry header file, template file,
+    # dust opacities and collisional rates.
 
-    # Import the template file.
+    os.system('cp ../%s .' % chemheader)
     os.system('cp ~/LimeFiles/%s .' % modelfile)
-    
-    # Import the dust opacities. If none specified, assume default.
     if dustfile is None:    
         dustfile = 'jena_thin_e6.tab'
     os.system('cp ~/LimeFiles/%s .' % dustfile)
-
-    # Import the collisional rate datafile.
     os.system('cp ~/LimeFiles/%s .' % datfile.lower())
 
     # For each iteration of the model, create a new model_X.c file.
+
     for m in range(nmodels):
         print 'Running model %d...' % m
         
@@ -74,12 +68,17 @@ def runModels(chemheader, fileout, transitions, stellarmass, mach,
                              equaltemp=equaltemp)
 
         # Run the model.
+        
         os.system('nohup lime -n -f -p 20 %d.c >nohup_%d.out 2>&1 &'
                   % (m, m))
         time.sleep(120)
 
-    # Make sure all the models have run through. This is achieved by checking 
-    # that there are no more .x files in the directory.
+    # Make sure all the models have run through.
+    # This is achieved by checking that there are no more .x files in 
+    # the current directory.
+    # Currently, if the run fails, the .x file is left and not removed.
+    # Need to implement some way to check that this is not the case.
+    
     remaining = -1
     while len([fn for fn in os.listdir(os.curdir) if fn.endswith('.x')]) > 0:
         newremaining = len([fn for fn in os.listdir(os.curdir) if fn.endswith('.x')])
@@ -90,7 +89,9 @@ def runModels(chemheader, fileout, transitions, stellarmass, mach,
     print 'All instances complete.'
     
     # Average all the files with the same transition.
-    # Save the standard deviations of the models as an auxillary file.  
+    # Implement something which calculates the standard devitation of
+    # the models so we know what the averaging has done.
+
     for t in transitions:
         for i in thetas:
             readdata = np.array([fits.getdata('%d_%.3f_%d.fits' % (m, i, t), 0)
@@ -101,8 +102,9 @@ def runModels(chemheader, fileout, transitions, stellarmass, mach,
             hdulist.writeto(fileout+'_%.3f_%d.fits' % (i, t))
             os.system('mv %s_%.3f_%d.fits ../' % (fileout, i, t))
             np.save('../%s_%.3f_%d_stddev' % (fileout, i, t), averaged)
-            
-    # Exit the folder and delete it.
+
+    # Exit the folder and delete it and everything in it.
+    
     os.chdir('../')
     os.system('rm -rf %s' % foldername)
 
