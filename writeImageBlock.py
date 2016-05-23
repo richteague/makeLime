@@ -8,7 +8,7 @@ def imageblock(nimg, model, nimg, nchan, velres, trans, pxls, imgres,
                theta, phi, distance, unit):
     
     # Generate the image block to insert. 
-    filename = '%s_%.3f_%.3f_%d' % (model, theta, phi, trans)
+    filename = '%d_%.3f_%.3f_%d' % (model, theta, phi, trans)
     
     lines = ['' for i in range(10)]
     lines[0] = 'img[%.0f].nchan = %.0f;' % (nimg, nchan)
