@@ -137,7 +137,7 @@ def generateModelFile(chemheader, model, transitions, stellarmass,
                 break
                 
     else:
-        print 'Assuming equal dust and gas temperatures.    
+        print 'Assuming equal dust and gas temperatures.'
 
 
     # Gas to dust ratio.
