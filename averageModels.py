@@ -7,7 +7,8 @@ from astropy.io import fits
 # of each pixel so that one could understand MCMC noise from
 # the gridding.
 
-averageModels(nmodels, thetas, phis, transitions, returnnoise=True):
+averageModels(nmodels, thetas, phis, transitions,
+              returnnoise=True, directory='../'):
 
     for t in thetas:
         for p in phis:
@@ -20,7 +21,7 @@ averageModels(nmodels, thetas, phis, transitions, returnnoise=True):
                 hdulist = fits.open('0_%.3f_%.3f_%d.fits' % (t, p, j))
                 hdulist[0].data = averaged
                 hdulist.writeto(fileout+'_%.3f_%.3f_%d.fits' % (t, p, j))
-                os.system('mv %s_%.3f_%.3f_%d.fits ../' % (fileout, i, t, j))
+                os.system('mv %s_%.3f_%.3f_%d.fits %s' % (fileout, i, t, j, directory))
                 
                 # If appropriate, calculate the grid noise.
                 
@@ -29,7 +30,7 @@ averageModels(nmodels, thetas, phis, transitions, returnnoise=True):
                     hdulist = fits.open('0_%.3f_%.3f_%d.fits' % (t, p, j))
                     hdulist[0].data = gridnoise
                     hdulist.writeto(fileout+'_%.3f_%.3f_%d_noise.fits' % (t, p, j))
-                    os.system('mv %s_%.3f_%.3f_%d_noise.fits ../' % (fileout, t, p, j))
+                    os.system('mv %s_%.3f_%.3f_%d_noise.fits %s' % (fileout, t, p, j, directory))
                     
                     print 'For inclination: %.2f,' % t
                     print 'position angle: %.2f,' % p
