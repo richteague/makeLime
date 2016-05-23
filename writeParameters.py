@@ -3,7 +3,7 @@
 # rin and rout are the minimum and maximum (polar) radial points
 # from the chemical model.  
     
-def inputparameters(pIntensity, sinkPoints, dustfile, molfile, antialias,
+def inputparameters(model, template, pIntensity, sinkPoints, dustfile, molfile, antialias,
                     lte_only, blend, rin, rout, popfile=False):
 
     # Generate the parameter block to insert.
@@ -24,7 +24,7 @@ def inputparameters(pIntensity, sinkPoints, dustfile, molfile, antialias,
     lines[9] = 'par->blend = %.0f;' % (blend)
     
     if popfile:
-        lines[10] = 'par->outputfile = "popfile";'
+        lines[10] = 'par->outputfile = "popfile_%s.out";' % model
     
     toinsert = ''
     for line in lines:

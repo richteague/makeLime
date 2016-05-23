@@ -48,8 +48,7 @@ import averageModels as aM
 #   Assume {density} is the oH2 density and {string} is the 
 #   pH2 density, setting density[0] and density[1] respectively.
 # popfile (boolean, optional) - 
-#   Return the level population file. Will return for model 0.
-#   TODO: Include a way to average over several models.
+#   Return the level population file. Will return the sum of all models.
 # returnnoise (boolean, optional) - 
 #   If true and nmodels > 1, will return a .fits file containing the standard
 #   deviation of each pixel from the array of models to give an idea of the MCMC
@@ -62,7 +61,7 @@ import averageModels as aM
 def runModels(chemheader, fileout, transitions, stellarmass, mach,
               pIntensity, sinkPoints, antialias, lte_only, blend, 
               nchan, velres, pxls, imgres, distance, unit, thetas, phis,
-              datfile, nmodels=1, modelfile=None,
+              datfile, nmodels=1, modelfile=None, equaltemp=True,
               dustfile=None, orthoratio=None, popfile=False,
               returnnoise=False, directory='../'):
 
@@ -109,10 +108,12 @@ def runModels(chemheader, fileout, transitions, stellarmass, mach,
     # is then deleted. Wait for 2 minutes before starting a new one.
 
     for m in range(nmodels):
-        wl.generateModelFile(chemheader, m, transitions, stellarmass,
+        print '\n'
+        print 'Running model %d of %d.' % (m+1, nmodels)
+        wl.generateModelFile(chemheader, '%d' % m, transitions, stellarmass,
                              mach, pIntensity, sinkPoints,
                              dustfile, antialias, lte_only, blend,  nchan,
-                             velres, pxls, imgres, thetas, phi, distance,
+                             velres, pxls, imgres, thetas, phis, distance,
                              unit, datfile, modelfile=modelfile, 
                              equaltemp=equaltemp, popfile=popfile)
         os.system('nohup lime -n -f -p 20 %d.c >nohup_%d.out 2>&1 &'
@@ -138,11 +139,13 @@ def runModels(chemheader, fileout, transitions, stellarmass, mach,
     aM.averageModels(nmodels, 
                      thetas, 
                      phis, 
-                     transitions, 
+                     transitions,
+                     fileout, 
                      returnnoise=returnnoise,
-                     directory=directory)
+                     directory=directory,
+                     popfile=popfile)
 
-    
+
     # Exit the folder and delete it.
     os.chdir('../')
     os.system('rm -rf %s' % foldername)

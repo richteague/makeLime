@@ -10,7 +10,7 @@ import writeHeader as WH
 def generateModelFile(chemheader, model, transitions, stellarmass,
                       mach, pIntensity, sinkPoints,
                       dustfile, antialias, lte_only, blend, nchan,
-                      velres, pxls, imgres, thetas, phi, distance, unit,
+                      velres, pxls, imgres, thetas, phis, distance, unit,
                       collisionfile, orthoratio=None, popfile=False,
                       modelfile='model_template.c', equaltemp=True):
 
@@ -47,10 +47,12 @@ def generateModelFile(chemheader, model, transitions, stellarmass,
     # See the LIME manual for values. rin and rout are taken
     # from the header file.
     
-    wP.inputparameters(pIntensity, 
+    wP.inputparameters(model, 
+                       template,
+                       pIntensity, 
                        sinkPoints, 
                        dustfile, 
-                       molfile, 
+                       collisionfile, 
                        antialias,
                        lte_only, 
                        blend, 
@@ -187,7 +189,7 @@ def generateModelFile(chemheader, model, transitions, stellarmass,
         for p, phi in enumerate(phis):
             for t, trans in enumerate(transitions):   
                 nimg = int(i*len(transitions) + p*len(phis) + t)
-                wIB.imageblock(nimg,
+                wIB.imageblock(template,
                                model,
                                nimg, 
                                nchan, 
@@ -199,7 +201,7 @@ def generateModelFile(chemheader, model, transitions, stellarmass,
                                phi, 
                                distance, 
                                unit)
-                    break
+                break
                     
     
     # Save as a model.c file to run.

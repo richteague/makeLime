@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import scipy.constants as sc
 from astropy.io import fits
 
 # Average all the models from LIME. 
@@ -7,8 +8,8 @@ from astropy.io import fits
 # of each pixel so that one could understand MCMC noise from
 # the gridding. If there's only one model, just rename it.
 
-averageModels(nmodels, thetas, phis, transitions,
-              returnnoise=True, directory='../'):
+def averageModels(nmodels, thetas, phis, transitions, fileout,
+                  returnnoise=True, directory='../', popfile=False):
 
     if nmodels > 1:
         for t in thetas:
@@ -17,12 +18,12 @@ averageModels(nmodels, thetas, phis, transitions,
                 
                     # Calculate the averages and move the file to the folder above.
                     
-                    toaverage = np.array([fits.getdata('%d_%.3f_%.3f_%d.fits' % (m, t, p, j), 0)])
+                    toaverage = np.array([fits.getdata('%d_%.3f_%.3f_%d.fits' % (m, t, p, j), 0) for m in range(nmodels)])
                     averaged = np.average(toaverage, axis=0)
                     hdulist = fits.open('0_%.3f_%.3f_%d.fits' % (t, p, j))
                     hdulist[0].data = averaged
                     hdulist.writeto(fileout+'_%.3f_%.3f_%d.fits' % (t, p, j))
-                    os.system('mv %s_%.3f_%.3f_%d.fits %s' % (fileout, i, t, j, directory))
+                    os.system('mv %s_%.3f_%.3f_%d.fits %s' % (fileout, t, p, j, directory))
                     
                     # If appropriate, calculate the grid noise.
                     
@@ -36,12 +37,23 @@ averageModels(nmodels, thetas, phis, transitions,
                         print 'For inclination: %.2f,' % t
                         print 'position angle: %.2f,' % p
                         print 'and transition: %d,' % j
-                        print 'we have a grid noise of: %.2f [units].' % (gridnoise.mean())
+                        print 'we have a mean fractional grid noise of: %.5e [units].' % (np.nanmean(gridnoise/averaged))
+                        print 'Through averaging we reduce this to: %.5e [units].' % (np.nanmean(gridnois/averaged)/np.sqrt(nmodels))
         
-        else:
-            for t in thetas:
-                for p in phis:
-                    for j in transitions:
-                        os.system('mv 0_%.3f_%.3f_%d.fits %s' % (t, p, j, directory))
+
+
+    else:
+        for t in thetas:
+            for p in phis:
+                for j in transitions:
+                    os.system('mv 0_%.3f_%.3f_%d.fits %s%s_%.3f_%.3f_%d.fits' % (t, p, j, directory, fileout, t, p, j))
+
+    
+    # Combine all the population files into one and save as a Python binary file.
+    if popfile:
+        popfiles = np.vstack([np.loadtxt('popfile_%d.out' % m) for m in range(nmodels)]).T
+        popfiles[:3] /= sc.au
+        np.save('%s%s_popfile' % (directory, fileout), popfiles)
+
     return
 

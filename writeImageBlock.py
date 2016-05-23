@@ -4,11 +4,11 @@
 #   filename = modelnumber_theta_phi_trans.fits
 # Note that model is a string.
 
-def imageblock(nimg, model, nimg, nchan, velres, trans, pxls, imgres,
+def imageblock(template, model, nimg, nchan, velres, trans, pxls, imgres,
                theta, phi, distance, unit):
     
     # Generate the image block to insert. 
-    filename = '%d_%.3f_%.3f_%d' % (model, theta, phi, trans)
+    filename = '%s_%.3f_%.3f_%d' % (model, theta, phi, trans)
     
     lines = ['' for i in range(10)]
     lines[0] = 'img[%.0f].nchan = %.0f;' % (nimg, nchan)

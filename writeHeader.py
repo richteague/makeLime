@@ -9,7 +9,10 @@ import scipy.constants as sc
 # and zvals is the second.
 
 def valsfromheader(headername):
-    with open('../'+headername) as f:
+    tempname = headername
+    if tempname[-2:] != '.h':
+        tempname += '.h'
+    with open('../'+tempname) as f:
         header = f.readlines()
     i = 18
     while header[0][i] != ']':
@@ -36,8 +39,11 @@ def valsfromheader(headername):
 # Reads the array names from the header file.
 # Calls the parsename() function for each array in the header.
     
-def arrsfromheader(headername):    
-    with open('../'+headername) as f:
+def arrsfromheader(headername):
+    tempname = headername
+    if tempname[-2:] != '.h':
+        tempname += '.h'
+    with open('../'+tempname) as f:
         header = f.readlines()
     return np.array([parsename(line) for line in header])
 
