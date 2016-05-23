@@ -47,6 +47,9 @@ import averageModels as aM
 # orthoratio == string;
 #   Assume {density} is the oH2 density and {string} is the 
 #   pH2 density, setting density[0] and density[1] respectively.
+# popfile (boolean, optional) - 
+#   Return the level population file. Will return for model 0.
+#   TODO: Include a way to average over several models.
 # returnnoise (boolean, optional) - 
 #   If true and nmodels > 1, will return a .fits file containing the standard
 #   deviation of each pixel from the array of models to give an idea of the MCMC
@@ -60,7 +63,7 @@ def runModels(chemheader, fileout, transitions, stellarmass, mach,
               pIntensity, sinkPoints, antialias, lte_only, blend, 
               nchan, velres, pxls, imgres, distance, unit, thetas, phis,
               datfile, nmodels=1, modelfile=None,
-              dustfile=None, orthoratio=None,
+              dustfile=None, orthoratio=None, popfile=False,
               returnnoise=False, directory='../'):
 
 
@@ -111,7 +114,7 @@ def runModels(chemheader, fileout, transitions, stellarmass, mach,
                              dustfile, antialias, lte_only, blend,  nchan,
                              velres, pxls, imgres, thetas, phi, distance,
                              unit, datfile, modelfile=modelfile, 
-                             equaltemp=equaltemp)
+                             equaltemp=equaltemp, popfile=popfile)
         os.system('nohup lime -n -f -p 20 %d.c >nohup_%d.out 2>&1 &'
                   % (m, m))
         time.sleep(120)
