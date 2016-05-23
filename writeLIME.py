@@ -100,11 +100,20 @@ def generateModelFile(chemheader, model, transitions, stellarmass,
             break
     
     
-    # LIME model properties.
-    # The inner and outer radii are read from the header file.
+    # Insert the properties relating to the radiative transfer.
+    # See the LIME manual for values. rin and rout are taken
+    # from the header file.
     
-    wP.inputparameters(pIntensity, sinkPoints, dustfile, molfile, antialias,
-                       lte_only, blend, rin, rout, popfile=popfile)
+    wP.inputparameters(pIntensity, 
+                       sinkPoints, 
+                       dustfile, 
+                       molfile, 
+                       antialias,
+                       lte_only, 
+                       blend, 
+                       rin, 
+                       rout, 
+                       popfile=popfile)
 
 
     # Collider Densities. 
