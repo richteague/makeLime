@@ -1,6 +1,7 @@
 import fileinput
 import numpy as np
 import writeImageBlock as wIB
+import writeParameters as wP
 
 # Functions to write a model.c file for LIME.
 # Use in conjunction with scriptLIME.py.
@@ -57,30 +58,7 @@ def parsename(line):
         i -= 1
     return line[i+1:j]
 
-def inputparameters(pIntensity, sinkPoints, dustfile, molfile, antialias,
-                    lte_only, blend, rin, rout):
 
-    # Write the input parameters block for the model file.
-    # rin and rout are the minimum and maximum (polar) radial points
-    # from the chemical model.    
-    
-    lines = ['' for i in range(10)]
-    lines[0] = 'par->radius = %.2f*AU;' % (rout)
-    lines[1] = 'par->minScale = %.2f*AU;' % (rin)
-    lines[2] = 'par->pIntensity = %.0f;' % (pIntensity)
-    lines[3] = 'par->sinkPoints = %.0f;' % (sinkPoints)
-    lines[4] = 'par->dust = "%s";' % (dustfile)
-    lines[5] = 'par->moldatfile[0] = "%s";' % (molfile)
-    lines[6] = 'par->antialias = %.0f;' % (antialias)
-    lines[7] = 'par->sampling = 2;'
-    lines[8] = 'par->lte_only = %.0f;' % (lte_only)
-    lines[9] = 'par->blend = %.0f;' % (blend)
-    
-    toinsert = ''
-    for line in lines:
-        toinsert += line + '\n'
-    
-    return toinsert
     
   
     
@@ -90,7 +68,7 @@ def generateModelFile(chemheader, model, transitions, stellarmass,
                       mach, pIntensity, sinkPoints,
                       dustfile, antialias, lte_only, blend, nchan,
                       velres, pxls, imgres, thetas, phi, distance, unit,
-                      collisionfile, orthoratio=None,
+                      collisionfile, orthoratio=None, popfile=False,
                       modelfile='model_template.c', equaltemp=True):
 
     # Read in the template with which to generate the model.c file.
@@ -125,19 +103,8 @@ def generateModelFile(chemheader, model, transitions, stellarmass,
     # LIME model properties.
     # The inner and outer radii are read from the header file.
     
-    for l, line in enumerate(template):
-        parsedline = ''.join(line.split())
-        if parsedline.startswith('//InputParameters'):
-            template.insert(l+1, inputparameters(pIntensity,
-                                                 sinkPoints, 
-                                                 dustfile,
-                                                 collisionfile, 
-                                                 antialias, 
-                                                 lte_only, 
-                                                 blend,
-                                                 rin,
-                                                 rout))
-            break
+    wP.inputparameters(pIntensity, sinkPoints, dustfile, molfile, antialias,
+                       lte_only, blend, rin, rout, popfile=popfile)
 
 
     # Collider Densities. 
