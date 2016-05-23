@@ -1,5 +1,6 @@
 import fileinput
 import numpy as np
+import writeImageBlock as wIB
 
 # Functions to write a model.c file for LIME.
 # Use in conjunction with scriptLIME.py.
@@ -56,32 +57,6 @@ def parsename(line):
         i -= 1
     return line[i+1:j]
 
-def imageblock(model, nimg, nchan, velres, trans, pxls, imgres, theta,
-               phi, distance, unit):
-    
-    # Write an image block with the given parameters.
-    
-    # Make sure that 'nimg' is unique per model file!
-    filename = '%s_%.3f_%d' % (model, theta, trans)
-    
-    lines = ['' for i in range(10)]
-    lines[0] = 'img[%.0f].nchan = %.0f;' % (nimg, nchan)
-    lines[1] = 'img[%.0f].velres = %.0f;' % (nimg, velres)
-    lines[2] = 'img[%.0f].trans = %.0f;' % (nimg, trans)
-    lines[3] = 'img[%.0f].pxls = %.0f;' % (nimg, pxls)
-    lines[4] = 'img[%.0f].imgres = %.3f;' % (nimg, imgres)
-    lines[5] = 'img[%.0f].theta = %.3f;' % (nimg, theta) 
-    lines[6] = 'img[%.0f].phi = %.3f;' %  (nimg, phi)
-    lines[7] = 'img[%.0f].distance = %.1f*PC;' % (nimg, distance)
-    lines[8] = 'img[%.0f].unit = %.0f;' % (nimg, unit)
-    lines[9] = 'img[%.0f].filename = "%s.fits";' % (nimg, filename)   
-    toinsert = ''
-    for line in lines:
-        toinsert += line + '\n'
-    return toinsert
-    
-    
-    
 def inputparameters(pIntensity, sinkPoints, dustfile, molfile, antialias,
                     lte_only, blend, rin, rout):
 
@@ -283,34 +258,34 @@ def generateModelFile(chemheader, model, transitions, stellarmass,
             template.insert(l+1, '#define MACH %.3f\n' % mach)
             break
     
-   
-    # RUN THE MODELS HERE.
-
     
-    # For each transition and inclination specified, add in an image block.
+    # For each permuation of theta, phi and transition, 
+    # create a new image block. Each image block must have
+    # a unique nimg value. Note the filename convention:
+    #   filename = modelnumber_theta_phi_trans.fits
+    
     for i, theta in enumerate(thetas):
-        for t, trans in enumerate(transitions):
-            nimg = i*len(transitions) + t
-            for l, line in enumerate(template):
-                parsedline = ''.join(line.split())
-                if parsedline.startswith('//%0.f' % nimg):
-                    template.insert(l+1, imageblock(model,
-                                                    nimg, 
-                                                    nchan,
-                                                    velres, 
-                                                    trans, 
-                                                    pxls,
-                                                    imgres, 
-                                                    theta, 
-                                                    phi, 
-                                                    distance, 
-                                                    unit))
-                    template.insert(l+2, '// %.0f\n' % (nimg+1))
+        for p, phi in enumerate(phis):
+            for t, trans in enumerate(transitions):   
+                nimg = int(i*len(transitions) + p*len(phis) + t)
+                wIB.imageblock(nimg,
+                               model,
+                               nimg, 
+                               nchan, 
+                               velres, 
+                               trans, 
+                               pxls, 
+                               imgres,
+                               theta, 
+                               phi, 
+                               distance, 
+                               unit)
                     break
                     
     
     # Save as a model.c file to run.
     # Remove the '.c' if it has been added.
+    
     if model[-2:] == '.c':
         model = model[:-2]
     with open('%s.c' % model, "w") as tempfile:
