@@ -2,67 +2,10 @@ import fileinput
 import numpy as np
 import writeImageBlock as wIB
 import writeParameters as wP
+import writeHeader as WH
 
 # Functions to write a model.c file for LIME.
 # Use in conjunction with scriptLIME.py.
-
-
-def valsfromheader(headername):
-
-    # Reads the inner and outer radial points to define LIME's 
-    # computational domain. Reads in the number of cells for the
-    # interpolate routine. Assumes that rvals is the first line 
-    # and zvals is the second.
-
-    with open('../'+headername) as f:
-        header = f.readlines()
-    i = 18
-    while header[0][i] != ']':
-        if header[0][i] == '[':
-            j = i
-        i += 1
-    ncells= int(header[0][j+1:i])
-    while header[0][i] != ',':
-        if header[0][i] == '{':
-            j = i
-        i += 1
-    rin = float(header[0][j+1:i])
-    i = -2
-    while header[0][i] != ',':
-        i -= 1
-    rout = float(header[0][i+2:-3])
-    i = -2
-    while header[1][i] != ',':
-        i -= 1
-    rout = np.hypot(float(header[1][i+2:-3]), rout)
-    return rin, rout, ncells
-
-def arrsfromheader(headername):
-    
-    # Reads the array names from the header file.
-    # Calls the parsename() function for each array in the header.
-    
-    with open('../'+headername) as f:
-        header = f.readlines()
-    return np.array([parsename(line) for line in header])
-
-def parsename(line):
-    
-    # Parses the name from a C array declaration.
-    
-    i = 0
-    while line[i] != '[':
-        i += 1
-    j = i
-    while line[i] != ' ':
-        i -= 1
-    return line[i+1:j]
-
-
-    
-  
-    
-
 # Write a model.c file for LIME. 
 def generateModelFile(chemheader, model, transitions, stellarmass,
                       mach, pIntensity, sinkPoints,
@@ -83,7 +26,7 @@ def generateModelFile(chemheader, model, transitions, stellarmass,
     # Also include the number of chemical model points and inner
     # and outer radii used in the interpolation routine.
 
-    rin, rout, ncells = valsfromheader(chemheader)
+    rin, rout, ncells = WH.valsfromheader(chemheader)
         
     if chemheader[-2:] == '.h':
         chemheader = chemheader[:-2]
@@ -181,7 +124,7 @@ def generateModelFile(chemheader, model, transitions, stellarmass,
     # If the header file contains {dtemp} and equaltemp is True, 
     # we include the dust temperature as temperature[1].
     
-    if 'dtemp' in arrsfromheader(chemheader) and not equaltemp:
+    if 'dtemp' in WH.arrsfromheader(chemheader) and not equaltemp:
         print 'Assuming different dust and gas temperatures.'   
         dstring = ('''temperature[1]=findvalue(hypot(x,y)/AU,fabs(z)/AU,dtemp);\n
                    if(temperature[1]<2.7){\n
@@ -204,7 +147,7 @@ def generateModelFile(chemheader, model, transitions, stellarmass,
     for l, line in enumerate(template):
         parsedline = ''.join(line.split())
         if parsedline.startswith('//GasToDust'):
-            if 'g2d' in arrsfromheader(chemheader):
+            if 'g2d' in WH.arrsfromheader(chemheader):
                 gtd = ('''*gtd=findvalue(hypot(x,y)/AU,fabs(z)/AU,g2d);\n
                          if(*gtd<50.){\n
                          *gtd = 50.;\n
