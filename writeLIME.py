@@ -201,7 +201,6 @@ def generateModelFile(chemheader, model, transitions, stellarmass,
                                phi, 
                                distance, 
                                unit)
-                break
                     
     
     # Save as a model.c file to run.

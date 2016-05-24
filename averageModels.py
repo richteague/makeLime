@@ -38,7 +38,7 @@ def averageModels(nmodels, thetas, phis, transitions, fileout,
                         print 'position angle: %.2f,' % p
                         print 'and transition: %d,' % j
                         print 'we have a mean fractional grid noise of: %.5e [units].' % (np.nanmean(gridnoise/averaged))
-                        print 'Through averaging we reduce this to: %.5e [units].' % (np.nanmean(gridnois/averaged)/np.sqrt(nmodels))
+                        print 'Through averaging we reduce this to: %.5e [units].' % (np.nanmean(gridnoise/averaged)/np.sqrt(nmodels))
         
 
 
