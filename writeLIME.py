@@ -4,9 +4,8 @@ import writeImageBlock as wIB
 import writeParameters as wP
 import writeHeader as WH
 
-# Functions to write a model.c file for LIME.
-# Use in conjunction with scriptLIME.py.
 # Write a model.c file for LIME. 
+
 def generateModelFile(chemheader, model, transitions, stellarmass,
                       mach, pIntensity, sinkPoints,
                       dustfile, antialias, lte_only, blend, nchan,
@@ -137,7 +136,6 @@ def generateModelFile(chemheader, model, transitions, stellarmass,
             if parsedline.startswith('//DustTemperature'):
                 template.insert(l+1, dstring)
                 break
-                
     else:
         print 'Assuming equal dust and gas temperatures.'
 
