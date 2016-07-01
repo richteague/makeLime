@@ -54,8 +54,8 @@ def writeVelocityStructure(template, stellarmass=None, velocityheader=None):
             if parsedline.startswith('//Include'):
                 template.insert(ll+1, '#include "%s"\n' % velocityheader)
                 break
-        template.insert(l+1, 'velocity[0] = findvalue(sqrt(x*x + y*y)/AU, fabs(z)/AU, velx);\n')
-        template.insert(l+2, 'velocity[1] = findvalue(sqrt(x*x + y*y)/AU, fabs(z)/AU, vely);\n')
-        template.insert(l+3, 'velocity[2] = findvalue(sqrt(x*x + y*y)/AU, fabs(z)/AU, velz);\n')
+        template.insert(l+1, 'velocity[0] = findvalue(cone, ctwo, cthree, velx);\n')
+        template.insert(l+2, 'velocity[1] = findvalue(cone, ctwo, cthree, vely);\n')
+        template.insert(l+3, 'velocity[2] = findvalue(cone, ctwo, cthree, velz);\n')
 
     return
