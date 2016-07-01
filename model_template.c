@@ -159,43 +159,16 @@ double findvalue(double rad, double alt, const double arr[NCELLS])
 */
 
 void density(double x, double y, double z, double *density){	
-
-    // Total / Ortho- H2 Density.
-    density[0] = findvalue(sqrt(x*x + y*y)/AU, fabs(z)/AU, dens);
-    if (density[0] < 1e-30)
-    {
-        density[0] = 1e-30;
-    }    
-    
-    // Para H2 Density
-    
+    // Density
 }
 
 void temperature(double x, double y, double z, double *temperature){
-
-    temperature[0] = findvalue(sqrt(x*x + y*y)/AU, fabs(z)/AU, temp);
-    
-    if (temperature[0] < 2.7)
-    {
-        temperature[0] = 2.7;
-    }  
-
-    // Dust Temperature
-    
+    // Temperature
 }
 
 void abundance(double x, double y, double z, double *abundance)
 {
-
-    abundance[0] = findvalue(sqrt(x*x + y*y)/AU, fabs(z)/AU, abund);
-    
-    if (abundance[0] < 0.0)
-    {
-        abundance[0] = 0.0;
-    }
-    
-    // Ortho Correction    
-
+    // Abundance
 }
 
 void doppler(double x, double y, double z, double *doppler)
