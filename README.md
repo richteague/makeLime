@@ -26,3 +26,7 @@ __TO DO:__ Make a more general header writing function.
 
 `runLIME.py` -
 Need to write this to run multiple models simultaneously and then save some statistics about the averaging.
+
+
+`physicalsctructure.py` - 
+Write density, temperature, abundance and gas-to-dust ratio for the model.c file. 
