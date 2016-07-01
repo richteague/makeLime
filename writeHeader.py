@@ -60,16 +60,25 @@ def parsename(line):
     return line[i+1:j]
 
 # Create a LIME compatible header from Dima's chemical model.
-# TODO: This is specific. Make a more general version.
 
 def makeHeader(chemfile, headername=None, writevals=True, returnvals=False):
 
     # Format the data into LIME appropriate units.
     # If returnvals == True then return NCELLS, RIN and ROUT.
 
+    # For a gridded model, make sure that we clip areas.
+    # We choose regions where the dust temperature, fourth column, is 0.
+
+    data = np.loadtxt(chemfile, skiprows=3).T
+    data = np.array([np.where(data[3] != 0, param, 0.0) for param in data])
+
+    # Make the conversions to LIME appropriate units.
+    # Main collider density is in [m^-3]. 
+    # Relative abundance is with respect to the main collider density.
+    # Temperatures are all in [K].
+
     with np.errstate(divide='ignore'):
-        data = np.loadtxt(chemfile, skiprows=3).T
-        data[2] /= 2.33 * sc.m_p * 1e3 / 2.
+        data[2] /= 2.33 * sc.m_p * 1e3
         data[7] = np.where(data[2] != 0.0, data[7]/data[2], 0.0)
         data[2] *= 1e6
         data[6] = np.where(data[6] != 0.0, 1./data[6], 100.)
@@ -77,8 +86,8 @@ def makeHeader(chemfile, headername=None, writevals=True, returnvals=False):
 
     if writevals:
     
-        # Only do this if we want to write.
-    
+        # Function to write the arrays.   
+ 
         def getHeaderString(array, name):
             tosave = 'const static double %s[%d] = {' % (name, array.size)
             for val in array:

@@ -58,12 +58,33 @@ import averageModels as aM
 #   working directory.
 
 
-def runModels(chemheader, fileout, transitions, stellarmass, mach,
-              pIntensity, sinkPoints, antialias, lte_only, blend, 
-              nchan, velres, pxls, imgres, distance, unit, thetas, phis,
-              datfile, nmodels=1, modelfile=None, equaltemp=True,
-              dustfile=None, orthoratio=None, popfile=False,
-              returnnoise=False, directory='../'):
+def runModels(chemheader,                       # Chemical model.
+              fileout,                          # Filename for .fits.
+              transitions,                      # List of transitions to trace.
+              stellarmass,                      # Stellar mass used for Keplerian rotation.        
+              mach,                             # Turbulent broadening parameter.
+              pIntensity, 
+              sinkPoints, 
+              antialias, 
+              lte_only, 
+              blend, 
+              nchan, 
+              velres, 
+              pxls, 
+              imgres, 
+              distance, 
+              unit, 
+              thetas, 
+              phis,
+              datfile, 
+              nmodels=1,
+              modelfile='model_template.c', 
+              dustfile='jena_thin_e6.tab', 
+              orthoratio=None, 
+              popfile=False,
+              returnnoise=False, 
+              equaltemp=True, 
+              directory='../'):
 
 
     # Record the time.
@@ -72,6 +93,7 @@ def runModels(chemheader, fileout, transitions, stellarmass, mach,
     
     
     # Check all the input values and change if necessary.
+
     nmodels = max(1,nmodels)
     if modelfile is None:
         modelfile = 'model_template.c'

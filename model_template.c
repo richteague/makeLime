@@ -16,6 +16,8 @@
 #include "stdio.h"
 #include <stdlib.h>
 
+// Include
+
 // Chemical Model
 
 // Stellar Mass
@@ -198,24 +200,15 @@ void abundance(double x, double y, double z, double *abundance)
 
 void doppler(double x, double y, double z, double *doppler)
 {
-    double val[2];
-    temperature(x, y, z, &val[2]);
-    *doppler = MACH * sqrt(KBOLTZ * val[0] / 2.34 / AMU);
+    // Turbulence
 }
 
 void gasIIdust(double x, double y, double z, double *gtd)
 {
     // Gas To Dust
-
 }
 
 void velocity(double x, double y, double z, double *velocity)
 {
-
-    velocity[0] = sqrt(6.67e-11 * MSTAR * 2e30 / sqrt(x*x + y*y + z*z));
-    velocity[0] *= sin(atan2(y,x));
-    velocity[1] = -sqrt(6.67e-11 * MSTAR * 2e30 / sqrt(x*x + y*y + z*z));
-    velocity[1] *= cos(atan2(y,x));
-    velocity[2] = 0.0;    
-    
+    // Velocity
 }
