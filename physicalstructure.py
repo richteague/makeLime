@@ -1,5 +1,6 @@
 ''' Write the physical structure functions. '''
 
+import interpolation as interp
 
 # Write the doppler broadening component.
 def writeDopplerBroadening(temp, bvalue=0., btype='absolute'):
@@ -7,7 +8,9 @@ def writeDopplerBroadening(temp, bvalue=0., btype='absolute'):
     #Check that the broadening type is correct.
     if not (btype.lower() is 'absolute' or btype.lower() is 'mach'):
     raise ValueError("btype should be either 'absolute' or 'mach'.")
+    
     temp.append('void doppler(double x, double y, double z, double *doppler){\n')
+    interp.writeCoords(temp, coordsys, ndim)
     
     if btype.lower() == 'absolute':
         # Constant value.
@@ -27,6 +30,7 @@ def writeDopplerBroadening(temp, bvalue=0., btype='absolute'):
 def writeVelocityStructure(temp, stellarmass=None):
 
     temp.append('void velocity(double x, double y, double z, double *velocity){\n')
+    interp.writeCoords(temp, coordsys, ndim)
 
     if stellarmass is not None:
         temp.append('velocity[0] = sqrt(6.67e-11 * %.3f * 2e30 / sqrt(x*x + y*y + z*z));\n' % stellarmass)
@@ -49,6 +53,8 @@ def writeVelocityStructure(temp, stellarmass=None):
 def writeDensity(temp, opratio=None): 
 
     temp.append('void density(double x, double y, double z, *double density){\n')
+    interp.writeCoords(temp, coordsys, ndim)
+    
     temp.append('density[0] = findvalue(cone, ctwo, cthree, dens);\n')
 
     if type(opratio) is float:
@@ -74,6 +80,8 @@ def writeDensity(temp, opratio=None):
 def writeTemperatures(temp, dtemp=None):
 
     temp.append('void temperature(double x, double y, double z, double *temperature){\n')
+    interp.writeCoords(temp, coordsys, ndim)
+
     temp.append('temperature[0] = findvalue(cone, ctwo, cthree, temp);\n')
     temp.append('if (temperature[0] < 2.73){temperature[0] = 2.73;}\n')
 
@@ -96,8 +104,9 @@ def writeTemperatures(temp, dtemp=None):
 # Write the molecular abundances.
 def writeAbundance(temp, xmol=None, opratio=None):
 
-    temp.append('void abundance(double x, double y, double z, double *abundance){\n')
-    
+    temp.append('void abundance(double x, double y, double z, double *abundance){\n')    
+    interp.writeCoords(temp, coordsys, ndim)
+
     if xmol is None:
         temp.append('abundance[0] = findvalue(cone, ctwo, cthree, abund);\n')
     
@@ -122,13 +131,14 @@ def writeAbundance(temp, xmol=None, opratio=None):
 
 
 # Write the gas-to-dust ratio.
-def writeGastoDust(temp, g2d=None):
+def writeGastoDust(temp, coordsys='cyclindrical', ndim=2, g2d=None):
 
     if g2d is None:
         return
-
     else 
         temp.append('void gasIIdust(double x, double y, double z, double *gtd){\n')
+
+    interp.writeCoords(temp, coordsys, ndim)
 
     if type(g2d) is float:
         temp.append('*gtd = %.3e;\n' % g2d)
