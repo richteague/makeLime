@@ -33,4 +33,4 @@ Writes the specifics for the image block. For more information about the `LIME` 
 
 `pxls = 128` - Number of pixels per side of the output image.
 
-`unit = 0` - Unit of the output, 0 = Kelving, 1 - Jy/pix.
+`unit = 0` - Unit of the output, 0 = [K], 1 - [Jy/pix].
