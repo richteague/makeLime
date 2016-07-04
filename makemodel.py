@@ -44,7 +44,8 @@ def makeModelFile(chemheader, moldatfile, thetas, phis, transitions, nchan, velr
     ps.writeVelocityStructure(tempfile, stellarmass, coordsys, ndim)
     
 
-    with open('temp.c', 'w') as tosave:
+    # Save the output.
+    with open('model_%d.c' % modelnumber, 'w') as tosave:
         for line in tempfile:
             tosave.write('%s' % line)
 
