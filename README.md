@@ -12,7 +12,6 @@ Write the functions for the physical model. All functions have to be passed `coo
 
 ---
 
-##### Abundance
 ```python
 writeAbundance(tempfile, xmol=None, opratio=None, coordsys='cylindrical', ndim=2)
 ```
@@ -23,7 +22,6 @@ If ortho and para states of the main collider are specified, a correction must b
 
 ---
 
-##### Density
 ```python
 writeDensity(tempfile, opratio=None, coordsys='cylindrical', ndim=2)
 ```
@@ -32,7 +30,6 @@ Writes the main collider density, by deafult assumes this is the H2 density. If 
 
 ---
 
-##### Doppler Broadening
 ```python
 writeDopplerBroadening(tempfile, bval=0, btype='absolute', coordsys='cylindrical', ndim=2)
 ```
@@ -41,7 +38,6 @@ Where `bval` is the value, `btype` is either `'absolute'` for [m/s] or `'mach'` 
 
 ---
 
-##### Gas to Dust Ratio
 ```python
 writeGastoDust(tempfile, g2d=None, coordsys='cylindrical', ndim=2)
 ```
@@ -51,7 +47,6 @@ If `g2d` is a float, use a homoegenous value throughout the disk or specify the 
 
 ---
 
-##### Temperature
 ```python
 writeTemperatures(tempfile, dtemp=None, coordsys='cylindrical', ndim=2)
 ```
@@ -60,7 +55,6 @@ Includes the gas and dust temperatures. If `dtemp` is `None` then assumes equal 
 
 ---
 
-##### Velocity
 ```python
 writeVelocityStructure(tempfile, stellarmass=None, coordsys='cylindrical', ndim=2)
 ```
