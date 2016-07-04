@@ -7,7 +7,7 @@
     opratio = str   : assumes 'dens' is n(oH2) array and opratio is n(pH2) array.
 '''
 def writeDensity(temp, opratio=None): 
-    temp.append('void density(double x, double y, double z, *double density){\n'
+    temp.append('void density(double x, double y, double z, *double density){\n')
     temp.append('density[0] = findvalue(cone, ctwo, cthree, dens);\n')
     if type(opratio) is float:
         temp.append('density[0] *= (opratio / (1. + opratio));\n') 
@@ -17,7 +17,7 @@ def writeDensity(temp, opratio=None):
     elif type(opratio) is str:
         temp.append('density[1] = findvalue(cone, ctwo, cthree, %s);\n' % opratio)
         temp.append('if (density[1] < 1e-30){density[1] = 1e-30;}\n')
-    else:
+    elif opratio is not None:
         raise TypeError("opratio must be either None, a float or a string.")
     temp.append('if (density[0] < 1e-30){density[0] = 1e-30;}\n')
     temp.append('}\n')
@@ -40,7 +40,7 @@ def writeTemperatures(temp, dtemp=None):
     elif type(dtemp) is str:
         temp.append('temperature[1] = findvalue(cone, ctwo, cthree, %s);\n' % dtemp)
         temp.append('if (temperature[1] < 2.73){temperature[1] = 2.73;}\n')
-    else:
+    elif dtemp is not None:
         raise TypeError("dtemp must be either None, a float or a string.")
     temp.append('}\n')
     return
@@ -58,7 +58,7 @@ def writeAbundance(temp, xmol=None, opratio=None):
         temp.append('double val[2];\n')
         temp.append('density(x, y, z, &val[2]);\n')
         temp.append('abundance[0] *= val[1]/val[0] + 1.;\n')  
-    else:
+    elif dtemp is not None:
         raise TypeError("opratio must be either None, a float or a string.")
     temp.append('if (abundance[0] < 0.){abundance[0] = 0.;}\n')  
     temp.append('}\n')
