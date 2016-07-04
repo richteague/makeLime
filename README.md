@@ -59,7 +59,7 @@ writeGastoDust(tempfile, g2d=None, coordsys='cylindrical', ndim=2)
 ```
 
 Include the gas-to-dust ratio. If `g2d` is left as None, a standard 100:1 ratio is assumed. 
-If `g2d` is a float, use a homoegenous value throughout the disk or specify the array name as a string.
+If `g2d` is a float, use a homoegenous value throughout the disk or specify the array name as a string. `ming2d` is the minimum value it can take.
 
 ---
 
@@ -94,7 +94,7 @@ writeImageParameters(temp, radius, minScale, moldatfile, thetas, phis, transitio
                      imgres=0.035, distance=54., pxls=128, unit=0, modelnumber=0)
 ```
 
-The `radius` and `minScale` can be read from the `chemheader` file, see [writeSomething](google.com). All the information about the `LIME` specific values can be found in the [manual](https://lime.readthedocs.io/en/v1.5/usermanual.html).
+The `radius` and `minScale` can be read from the `chemheader` file, see `tobeMade`. All the information about the `LIME` specific values can be found in the [manual](https://lime.readthedocs.io/en/v1.5/usermanual.html).
 
 ---
 
