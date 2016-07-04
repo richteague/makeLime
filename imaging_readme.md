@@ -1,13 +1,14 @@
-### Filename Convention
-
-We adopt the naming convention: `modelnumber_theta_phi_trans.fits` in order to help averaging the values at the end. `theta`, `%.3f`, is the inclination, `phi` is postition angle (not yet!), `%.3f`, and `trans`, `%d`, is the transition specified in the LAMDA rate files.
-
----
-
-### imageblock.py
+## imaging.py 
 
 ```python
-imageblock(tempfile, nimg, modelnumber, theta, phi, trans, nchan, velres, imgres=None, distance=140., pxls=128, unit=0)
+writeImageParameters(tempfile, nimg, modelnumber, thetas, phis, transitions, nchan, velres, imgres=None, distance=140., pxls=128, unit=0)
+```
+
+Writes the imaging section of `model.c`. Parameters are discussed in `writeImageBlock`, however `thetas`, `phis` and `transitions` are lists of the values wanted. This will write a block for each permutation of parameters. 
+
+
+```python
+writeImageBlock(tempfile, nimg, modelnumber, theta, phi, trans, nchan, velres, imgres=None, distance=140., pxls=128, unit=0)
 ```
 
 Writes the specifics for the image block. For more information about the `LIME` specific values, read the [manual](https://lime.readthedocs.io/en/v1.5/usermanual.html). This should be called with a unique `nimg` value. Unless both `imgres` and `distance` are set, they are adjusted so that the image fills the given pixel size.
@@ -34,3 +35,7 @@ Writes the specifics for the image block. For more information about the `LIME` 
 `pxls = 128` - Number of pixels per side of the output image.
 
 `unit = 0` - Unit of the output, 0 = [K], 1 - [Jy/pix].
+
+##### Filename Convention
+
+We adopt the naming convention: `modelnumber_theta_phi_trans.fits` in order to help averaging the values at the end. `theta`, `%.3f`, is the inclination, `phi` is postition angle (not yet!), `%.3f`, and `trans`, `%d`, is the transition specified in the LAMDA rate files.
