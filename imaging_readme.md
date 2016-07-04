@@ -4,10 +4,15 @@ We adopt the naming convention: `modelnumber_theta_phi_trans.fits` in order to h
 
 ---
 
-### imageblock.py
+```python
+writeImageParameters(tempfile, nimg, modelnumber, thetas, phis, transitions, nchan, velres, imgres=None, distance=140., pxls=128, unit=0)
+```
+
+Writes the imaging section of `model.c`. Parameters are discussed in `writeImageBlock`, however `thetas`, `phis` and `transitions` are lists of the values wanted. This will write a block for each permutation of parameters. 
+
 
 ```python
-imageblock(tempfile, nimg, modelnumber, theta, phi, trans, nchan, velres, imgres=None, distance=140., pxls=128, unit=0)
+writeImageBlock(tempfile, nimg, modelnumber, theta, phi, trans, nchan, velres, imgres=None, distance=140., pxls=128, unit=0)
 ```
 
 Writes the specifics for the image block. For more information about the `LIME` specific values, read the [manual](https://lime.readthedocs.io/en/v1.5/usermanual.html). This should be called with a unique `nimg` value. Unless both `imgres` and `distance` are set, they are adjusted so that the image fills the given pixel size.
