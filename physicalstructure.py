@@ -67,7 +67,7 @@ def writeAbundance(temp, xmol=None, opratio=None):
     return
 
 
-def writeDusttoGas(temp, g2d=None):
+def writeGastoDust(temp, g2d=None):
 
     # Gas to dust ratio.
     if g2d is None:
