@@ -3,7 +3,7 @@
 import interpolation as interp
 
 # Write the doppler broadening component.
-def writeDopplerBroadening(temp, bvalue=0., btype='absolute'):
+def writeDopplerBroadening(temp, bvalue=0., btype='absolute', coordsys='cyclindrical', ndim=2):
     
     #Check that the broadening type is correct.
     if not (btype.lower() is 'absolute' or btype.lower() is 'mach'):
@@ -27,7 +27,7 @@ def writeDopplerBroadening(temp, bvalue=0., btype='absolute'):
 
 
 # Write the bulk velocity structure.
-def writeVelocityStructure(temp, stellarmass=None):
+def writeVelocityStructure(temp, stellarmass=None, coordsys='cyclindrical', ndim=2):
 
     temp.append('void velocity(double x, double y, double z, double *velocity){\n')
     interp.writeCoords(temp, coordsys, ndim)
@@ -50,7 +50,7 @@ def writeVelocityStructure(temp, stellarmass=None):
 
 
 # Write the main collider density.
-def writeDensity(temp, opratio=None): 
+def writeDensity(temp, opratio=None, coordsys='cyclindrical', ndim=2): 
 
     temp.append('void density(double x, double y, double z, *double density){\n')
     interp.writeCoords(temp, coordsys, ndim)
@@ -77,7 +77,7 @@ def writeDensity(temp, opratio=None):
 
 
 # Write the gas and dust temperatures.
-def writeTemperatures(temp, dtemp=None):
+def writeTemperatures(temp, dtemp=None, coordsys='cyclindrical', ndim=2):
 
     temp.append('void temperature(double x, double y, double z, double *temperature){\n')
     interp.writeCoords(temp, coordsys, ndim)
