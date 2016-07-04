@@ -21,7 +21,7 @@ def writeDopplerBroadening(temp, bvalue=0., btype='absolute', coordsys='cyclindr
         temp.append('\ttemperature(x, y, z, &val[2]);\n')
         temp.append('\t%.2f * sqrt(KBOLTZ * val[0] / 2.34 / AMU);\n')
         
-    temp.append('}\n\n\n')
+    temp.append('\n}\n\n\n')
 
     return
 
@@ -43,7 +43,7 @@ def writeVelocityStructure(temp, stellarmass=None, coordsys='cyclindrical', ndim
         temp.append('\tvelocity[1] = findvalue(cone, ctwo, cthree, vely);\n')
         temp.append('\tvelocity[2] = findvalue(cone, ctwo, cthree, velz);\n')
         
-    temp.append('}\n\n\n')
+    temp.append('\n}\n\n\n')
 
     return
 
@@ -63,16 +63,16 @@ def writeDensity(temp, opratio=None, coordsys='cyclindrical', ndim=2):
         temp.append('\tdensity[0] *= (opratio / (1. + opratio));\n') 
         temp.append('\tdensity[1] = findvalue(cone, ctwo, cthree, dens);\n')
         temp.append('\tdensity[1] /= (1. + opratio);\n') 
-        temp.append('\tif (density[1] < 1e-30){density[1] = 1e-30;}\n')
+        temp.append('\tif (density[1] < 1e-30) {\n\tdensity[1] = 1e-30;\n\t}\n\n')
 
     elif type(opratio) is str:
         temp.append('\tdensity[1] = findvalue(cone, ctwo, cthree, %s);\n' % opratio)
-        temp.append('\tif (density[1] < 1e-30){density[1] = 1e-30;}\n')
+        temp.append('\tif (density[1] < 1e-30) {\n\t\tdensity[1] = 1e-30;\n\t}\n\n')
 
     elif opratio is not None:
         raise TypeError("opratio must be either None, a float or a string.")
 
-    temp.append('\tif (density[0] < 1e-30){density[0] = 1e-30;}\n')
+    temp.append('\tif (density[0] < 1e-30) {\n\t\tdensity[0] = 1e-30;\n\t}\n\n')
     temp.append('}\n\n\n')
 
     return 
@@ -110,9 +110,9 @@ def writeAbundance(temp, xmol=None, opratio=None, coordsys='cyclindrical', ndim=
     interp.writeCoords(temp, coordsys, ndim)
 
     if xmol is None:
-        temp.append('\tabundance[0] = findvalue(cone, ctwo, cthree, abund);\n\n') 
+        temp.append('\tabundance[0] = findvalue(cone, ctwo, cthree, abund);\n') 
     else:
-        temp.append('\tabundance[0] = %.3e;\n\n' % float(xmol))
+        temp.append('\tabundance[0] = %.3e;\n' % float(xmol))
 
     if type(opratio) is int:
         opratio = float(opratio)
@@ -129,7 +129,7 @@ def writeAbundance(temp, xmol=None, opratio=None, coordsys='cyclindrical', ndim=
         raise TypeError("opratio must be either None, a float or a string.")
 
     temp.append('\tif (abundance[0] < 0.){\n\t\tabundance[0] = 0.;\n\t}\n')  
-    temp.append('}\n\n\n')
+    temp.append('\n}\n\n\n')
 
     return
 
