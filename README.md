@@ -7,7 +7,7 @@ Scripts to make running LIME models more efficient.
 
 ## makemodel.py
 
-Creates `model.c` using the functions specified below. *NOT YET FINISHED*
+Creates `model.c` using the functions specified below. _*NOT YET FINISHED*_
 
 ---
 
@@ -19,6 +19,8 @@ makeModelFile(chemheader, moldatfile, thetas, phis, transitions,
               coordsys='cyclindrical', ndim=2, opratio=None, dtemp=None, xmol=None, 
               g2d=None, bvalue=50., btype='absolute', stellarmass=0.6, modelnumber=0)
 ```
+---
+---
 
 ## physicalstructure.py
 
