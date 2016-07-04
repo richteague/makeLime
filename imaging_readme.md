@@ -1,8 +1,6 @@
 ### Filename Convention
 
-We adopt the naming convention: `modelnumber_theta_phi_trans.fits` in order to help averaging the values at the end. 
-`theta` is the inclination,
-`phi` is postition angle (not yet!) and `trans` is the transition specified in the LAMDA rate files.
+We adopt the naming convention: `modelnumber_theta_phi_trans.fits` in order to help averaging the values at the end. `theta`, `%.3f`, is the inclination, `phi` is postition angle (not yet!), `%.3f`, and `trans`, `%d`, is the transition specified in the LAMDA rate files.
 
 ---
 
