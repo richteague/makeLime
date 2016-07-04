@@ -3,8 +3,22 @@
 Scripts to make running LIME models more efficient.
 
 ---
+---
+
+## makemodel.py
+
+Creates `model.c` using the functions specified below. *NOT YET FINISHED*
 
 ---
+
+```python
+makeModelFile(chemheader, moldatfile, thetas, phis, transitions, 
+              nchan, velres, pIntensity=1e4, sinkPoints=1e3, dust='jena_thin_e6.tab', 
+              antialias=1, sampling=2, outputfile=None, binoutputfile=None, 
+              gridfile=None, non_lte=1, imgres=0.035, distance=54., pxls=128, unit=0,
+              coordsys='cyclindrical', ndim=2, opratio=None, dtemp=None, xmol=None, 
+              g2d=None, bvalue=50., btype='absolute', stellarmass=0.6, modelnumber=0)
+```
 
 ## physicalstructure.py
 
