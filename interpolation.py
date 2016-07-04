@@ -2,12 +2,12 @@
 
 import fileinput
 
-def writeCoords(temp, coordsys='cyclindrical', ndim=2):
+def writeCoords(temp, coordsys='cylindrical', ndim=2):
 
-    if not (coordsys is 'cyclindrical' and ndim is 2):
+    if not (coordsys is 'cylindrical' and ndim is 2):
         raise NotImplementedError
 
-    if coordsys is 'cyclindrical':
+    if coordsys is 'cylindrical':
         if ndim is 2:
             temp.append('\tdouble cone = sqrt(x*x + y*y) / AU;\n')
             temp.append('\tdouble ctwo = atan2(y, x);\n')
@@ -18,23 +18,27 @@ def writeCoords(temp, coordsys='cyclindrical', ndim=2):
 def writeFindValue(temp, ncells, coordsys='cyclindrical', ndim=2):
 
     # Include the appropriate interpolation routines. 
-    if not (coordsys is 'cyclindrical' and ndim is 2):
+    if not (coordsys is 'cylindrical' and ndim is 2):
         raise NotImplementedError 
 
 
+    # Find the correct path to the files.
+    import os
+    path =  os.path.dirname(__file__)
+
     # Grab the interpolation codes.
-    with open('InterpolationRoutines/interp_%dD_%s.txt' % (ndim, coordsys)) as f:
+    with open(path+'/InterpolationRoutines/interp_%dD_%s.txt' % (ndim, coordsys)) as f:
         lines = f.readlines()
     for line in lines:
-        temp.append(line+'\n')
+        temp.append(line)
     temp.append('\n\n')
 
 
     # Grab the cell finding codes.
-    with open('InterpolationRoutines/findcell_%dD_%s.txt' % (ndim, coordsys)) as f:
+    with open(path+'/InterpolationRoutines/findcell_%dD_%s.txt' % (ndim, coordsys)) as f:
         lines = f.readlines()
     for line in lines:
-        temp.append(line+'\n')
+        temp.append(line)
     temp.append('\n\n')
 
 

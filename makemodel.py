@@ -15,7 +15,8 @@ def makeModelFile(chemheader, moldatfile, thetas, phis, transitions, nchan, velr
     radius = 200.
     minScale = 2.
     ncells = 50000
-
+    coordsys = 'cylindrical'
+    ndim = 2
 
     # Include the imaging parameters.
     import imaging as im
@@ -25,6 +26,11 @@ def makeModelFile(chemheader, moldatfile, thetas, phis, transitions, nchan, velr
                             sampling=sampling, outputfile=outputfile, binoutputfile=binoutputfile,
                             gridfile=gridfile, non_lte=non_lte, imgres=imgres, distance=distance, 
                             pxls=pxls, unit=unit)
+
+
+    # Include the interpolation functions.
+    import interpolation as interp
+    interp.writeFindValue(tempfile, ncells=ncells, coordsys=coordsys, ndim=ndim)
 
 
     # Include the model functions.
