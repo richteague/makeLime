@@ -1,8 +1,4 @@
-### Filename Convention
-
-We adopt the naming convention: `modelnumber_theta_phi_trans.fits` in order to help averaging the values at the end. `theta`, `%.3f`, is the inclination, `phi` is postition angle (not yet!), `%.3f`, and `trans`, `%d`, is the transition specified in the LAMDA rate files.
-
----
+## imaging.py 
 
 ```python
 writeImageParameters(tempfile, nimg, modelnumber, thetas, phis, transitions, nchan, velres, imgres=None, distance=140., pxls=128, unit=0)
@@ -39,3 +35,7 @@ Writes the specifics for the image block. For more information about the `LIME` 
 `pxls = 128` - Number of pixels per side of the output image.
 
 `unit = 0` - Unit of the output, 0 = [K], 1 - [Jy/pix].
+
+##### Filename Convention
+
+We adopt the naming convention: `modelnumber_theta_phi_trans.fits` in order to help averaging the values at the end. `theta`, `%.3f`, is the inclination, `phi` is postition angle (not yet!), `%.3f`, and `trans`, `%d`, is the transition specified in the LAMDA rate files.
