@@ -1,4 +1,3 @@
-
 void findcell(double rad, double alt, int *aidx, 
               int *bidx, int *cidx, int *didx){
 

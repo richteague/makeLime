@@ -9,8 +9,8 @@ def makeModelFile(chemheader, moldatfile, thetas, phis, transitions, nchan, velr
                   coordsys='cyclindrical', ndim=2, opratio=None, dtemp=None, xmol=None, g2d=None, bvalue=50., btype='absolute',
                   stellarmass=0.6, modelnumber=0):
 
-    tempfile = ['#include "lime.h"\n', '#include "math.h"\n', '#include "stdio.h"\n', '#include "stdlib.h"\n\n']
-    tempfile.append('#include "%s.h"\n' % chemheader)
+    tempfile = ['#include "lime.h"\n', '#include "math.h"\n', '#include "stdio.h"\n', '#include "stdlib.h"\n']
+    tempfile.append('#include "%s.h"\n\n' % chemheader)
 
     # Calculate the radius, minScale and ncells from the chemheader.
     radius = 200.

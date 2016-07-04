@@ -43,28 +43,28 @@ def writeFindValue(temp, ncells, coordsys='cyclindrical', ndim=2):
 
 
     # Include the wrapper.
-    temp.append('double findvalue(double cone, double ctwo, double cthree, cont double arr[%d]){\n' % ncells) 
-    temp.append('double value;\n')
-    temp.append('int aidx, int bidx, int cidx, didx;\n')
-    temp.append('int eidx, int fidx, int gidx, didx;\n')    
+    temp.append('double findvalue(double cone, double ctwo, double cthree, cont double arr[%d]){\n\n' % ncells) 
+    temp.append('\tdouble value;\n')
+    temp.append('\tint aidx, int bidx, int cidx, didx;\n')
+    temp.append('\tint eidx, int fidx, int gidx, didx;\n')    
 
     if ndim is 2:
-        temp.append('findcell(cone, ctwo, &aidx, &bidx, &cidx, &didx);\n')
-        temp.append('if (aidx >= 0){\n')
-        temp.append('{value = linterpolate(cone, ctwo, aidx, bidx, cidx, didx, arr);}')
-        temp.append('else {value = -1.;}\n')
-        temp.append('return value;')
+        temp.append('\n\tfindcell(cone, ctwo, &aidx, &bidx, &cidx, &didx);\n')
+        temp.append('\tif (aidx >= 0) {\n')
+        temp.append('\t\tvalue = linterpolate(cone, ctwo, aidx, bidx, cidx, didx, arr);\n')
+        temp.append('\t} else {\n\t\tvalue = -1.;\n\t}\n\n')
+        temp.append('\treturn value;\n')
 
     elif ndim is 3:
-        temp.append('findcell(cone, ctwo, cthree, &aidx, &bidx, &cidx, &didx, &eidx, &fidx, &gidx, &hidx);\n')
-        temp.append('if (aidx >= 0){\n')
-        temp.append('{value = linterpolate(cone, ctwo, cthree, aidx, bidx, cidx, didx, eidx, fidx, gidx, hidx, arr);}')
-        temp.append('else {value = -1.;}\n')
-        temp.append('return value;')
+        temp.append('\n\tfindcell(cone, ctwo, cthree, &aidx, &bidx, &cidx, &didx, &eidx, &fidx, &gidx, &hidx);\n')
+        temp.append('\tif (aidx >= 0) {\n')
+        temp.append('\t\tvalue = linterpolate(cone, ctwo, cthree, aidx, bidx, cidx, didx, eidx, fidx, gidx, hidx, arr);\n')
+        temp.append('\t} else {\n\t\tvalue = -1.;\n\t}\n\n')
+        temp.append('\treturn value;\n')
         
     else:
         raise ValueError
 
-    temp.append('}\n\n')
+    temp.append('\n}\n\n\n')
 
     return
