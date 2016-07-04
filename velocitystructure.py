@@ -4,7 +4,7 @@
 # Write the doppler broadening component.
 def writeDopplerBroadening(temp, bvalue=0., btype='absolute'):
 
-    # Check that the broadening type is correct.
+    #Check that the broadening type is correct.
     if not (btype.lower() is 'absolute' or btype.lower() is 'mach'):
         raise ValueError("btype should be either 'absolute' or 'mach'.")
 
@@ -24,11 +24,7 @@ def writeDopplerBroadening(temp, bvalue=0., btype='absolute'):
     return
 
 
-def writeVelocityStructure(temp, stellarmass=None, velocityheader=None):
-
-    # Check that one of the two options are specified.
-    if (stellarmass is None and velocityheader is None):
-        raise ValueError("One of stellarmass or velocityheader must be specified.")
+def writeVelocityStructure(temp, stellarmass=None):
 
     temp.append('void velocity(double x, double y, double z, double *velocity){\n')   
  
