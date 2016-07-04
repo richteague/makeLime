@@ -88,7 +88,7 @@ def writeDopplerBroadening(temp, bvalue=0., btype='absolute', coordsys='cyclindr
 
 
 # Write the gas-to-dust ratio.
-def writeGastoDust(temp, g2d=None, coordsys='cyclindrical', ndim=2):
+def writeGastoDust(temp, g2d=None, ming2d=1., coordsys='cyclindrical', ndim=2):
 
     if g2d is None:
         return
@@ -102,7 +102,7 @@ def writeGastoDust(temp, g2d=None, coordsys='cyclindrical', ndim=2):
         interp.writeCoords(temp, coordsys, ndim)
         temp.append('\t*gtd = findvalue(cone, ctwo, cthree, %s);\n\n' % g2d)
 
-    temp.append('\tif (*gtd < 1) {\n\t\t*gtd = 1.;\n\t}\n')
+    temp.append('\tif (*gtd < %.1f) {\n\t\t*gtd = %.1f;\n\t}\n' % (ming2d, ming2d))
     temp.append('}\n\n\n')
 
     return
