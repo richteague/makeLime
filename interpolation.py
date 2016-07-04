@@ -9,9 +9,9 @@ def writeCoords(temp, coordsys='cyclindrical', ndim=2):
 
     if coordsys is 'cyclindrical':
         if ndim is 2:
-            temp.append('double cone = sqrt(x*x + y*y) / AU;\n')
-            temp.append('double ctwo = atan2(y, x);\n')
-
+            temp.append('\tdouble cone = sqrt(x*x + y*y) / AU;\n')
+            temp.append('\tdouble ctwo = atan2(y, x);\n')
+            temp.append('\tdouble cthree = 0.;\n\n')
 
     return
 
