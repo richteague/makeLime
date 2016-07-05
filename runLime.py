@@ -111,7 +111,7 @@ def runLime(chemheader, moldatfile, fileout, thetas, phis, transitions, nchan, v
     # Move the model out and then, if required, clear the folder.
     if cleanup:
         print 'Cleaning up temporary folders.'
-        os.system('rm -rf %f' % fname)
+        os.system('rm -rf %s' % fname)
 
 
     # Print the total time.
