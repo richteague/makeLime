@@ -7,7 +7,7 @@ void findcell(double rad, double alt, int *aidx,
     // Find the bounds of the radial points.
     while (rvals[i] < rad)
     {
-        if (i == NCELLS)
+        if (i == NCELLS-1)
         {
             *aidx = -1;
             return;

@@ -30,6 +30,7 @@ def writeFindValue(temp, ncells, coordsys='cyclindrical', ndim=2):
     with open(path+'/InterpolationRoutines/interp_%dD_%s.txt' % (ndim, coordsys)) as f:
         lines = f.readlines()
     for line in lines:
+        line = line.replace('NCELLS', '%d' % ncells)
         temp.append(line)
     temp.append('\n\n')
 
@@ -38,15 +39,15 @@ def writeFindValue(temp, ncells, coordsys='cyclindrical', ndim=2):
     with open(path+'/InterpolationRoutines/findcell_%dD_%s.txt' % (ndim, coordsys)) as f:
         lines = f.readlines()
     for line in lines:
+        line = line.replace('NCELLS', '%d' % ncells)
         temp.append(line)
     temp.append('\n\n')
 
 
     # Include the wrapper.
-    temp.append('double findvalue(double cone, double ctwo, double cthree, cont double arr[%d]){\n\n' % ncells) 
+    temp.append('double findvalue(double cone, double ctwo, double cthree, const double arr[%d]){\n\n' % ncells) 
     temp.append('\tdouble value;\n')
-    temp.append('\tint aidx, int bidx, int cidx, didx;\n')
-    temp.append('\tint eidx, int fidx, int gidx, didx;\n')    
+    temp.append('\tint aidx, bidx, cidx, didx;\n')
 
     if ndim is 2:
         temp.append('\n\tfindcell(cone, ctwo, &aidx, &bidx, &cidx, &didx);\n')
@@ -56,6 +57,7 @@ def writeFindValue(temp, ncells, coordsys='cyclindrical', ndim=2):
         temp.append('\treturn value;\n')
 
     elif ndim is 3:
+        temp.append('\tint eidx, fidx, gidx, hidx;\n')    
         temp.append('\n\tfindcell(cone, ctwo, cthree, &aidx, &bidx, &cidx, &didx, &eidx, &fidx, &gidx, &hidx);\n')
         temp.append('\tif (aidx >= 0) {\n')
         temp.append('\t\tvalue = linterpolate(cone, ctwo, cthree, aidx, bidx, cidx, didx, eidx, fidx, gidx, hidx, arr);\n')

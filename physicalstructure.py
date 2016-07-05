@@ -36,7 +36,7 @@ def writeAbundance(temp, xmol=None, opratio=None, coordsys='cyclindrical', ndim=
 # Write the main collider density.
 def writeDensity(temp, opratio=None, coordsys='cyclindrical', ndim=2): 
 
-    temp.append('void density(double x, double y, double z, *double density) {\n\n')
+    temp.append('void density(double x, double y, double z, double *density) {\n\n')
     interp.writeCoords(temp, coordsys, ndim)
     
     temp.append('\tdensity[0] = findvalue(cone, ctwo, cthree, dens);\n')
