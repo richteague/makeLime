@@ -6,7 +6,7 @@
 def makeModelFile(chemheader, moldatfile, thetas, phis, transitions, nchan, velres, 
                   pIntensity=1e4, sinkPoints=1e3, dust='jena_thin_e6.tab', antialias=1, sampling=2,
                   outputfile=None, binoutputfile=None, gridfile=None, lte_only=1, imgres=0.05, distance=54., pxls=128, unit=0,
-                  coordsys='cylindrical', ndim=2, opratio=None, dtemp=None, xmol=None, g2d=None, bvalue=50., btype='absolute',
+                  coordsys='cylindrical', opratio=None, dtemp=None, xmol=None, g2d=None, bvalue=50., btype='absolute',
                   stellarmass=0.6, modelnumber=0):
 
     tempfile = ['#include "lime.h"\n', '#include "math.h"\n', '#include "stdio.h"\n', '#include "stdlib.h"\n']
@@ -19,6 +19,10 @@ def makeModelFile(chemheader, moldatfile, thetas, phis, transitions, nchan, velr
     # Calculate the radius, minScale and ncells from the chemheader.
     import chemicalheader as ch
     minScale, radius, ncells = ch.valsfromheader(chemheader)
+    if 'c3arr' in ch.arrsfromheader(chemheader):
+        ndim = 3
+    else:
+        ndim = 2
 
     # Include the imaging parameters.
     import imaging as im

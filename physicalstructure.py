@@ -10,7 +10,7 @@ def writeAbundance(temp, xmol=None, opratio=None, coordsys='cyclindrical', ndim=
     interp.writeCoords(temp, coordsys, ndim)
 
     if xmol is None:
-        temp.append('\tabundance[0] = findvalue(cone, ctwo, cthree, abund);\n') 
+        temp.append('\tabundance[0] = findvalue(c1, c2, c3, abund);\n') 
     else:
         temp.append('\tabundance[0] = %.3e;\n' % float(xmol))
 
@@ -39,19 +39,19 @@ def writeDensity(temp, opratio=None, coordsys='cyclindrical', ndim=2):
     temp.append('void density(double x, double y, double z, double *density) {\n\n')
     interp.writeCoords(temp, coordsys, ndim)
     
-    temp.append('\tdensity[0] = findvalue(cone, ctwo, cthree, dens);\n')
+    temp.append('\tdensity[0] = findvalue(c1, c2, c3, dens);\n')
 
     if type(opratio) is int:
         opratio = float(opratio)
 
     if type(opratio) is float:
         temp.append('\tdensity[0] *= (opratio / (1. + opratio));\n') 
-        temp.append('\tdensity[1] = findvalue(cone, ctwo, cthree, dens);\n')
+        temp.append('\tdensity[1] = findvalue(c1, c2, c3, dens);\n')
         temp.append('\tdensity[1] /= (1. + opratio);\n') 
         temp.append('\tif (density[1] < 1e-30) {\n\tdensity[1] = 1e-30;\n\t}\n\n')
 
     elif type(opratio) is str:
-        temp.append('\tdensity[1] = findvalue(cone, ctwo, cthree, %s);\n' % opratio)
+        temp.append('\tdensity[1] = findvalue(c1, c2, c3, %s);\n' % opratio)
         temp.append('\tif (density[1] < 1e-30) {\n\t\tdensity[1] = 1e-30;\n\t}\n\n')
 
     elif opratio is not None:
@@ -100,7 +100,7 @@ def writeGastoDust(temp, g2d=None, ming2d=1., coordsys='cyclindrical', ndim=2):
 
     elif type(g2d) is str:
         interp.writeCoords(temp, coordsys, ndim)
-        temp.append('\t*gtd = findvalue(cone, ctwo, cthree, %s);\n\n' % g2d)
+        temp.append('\t*gtd = findvalue(c1, c2, c3, %s);\n\n' % g2d)
 
     temp.append('\tif (*gtd < %.1f) {\n\t\t*gtd = %.1f;\n\t}\n' % (ming2d, ming2d))
     temp.append('}\n\n\n')
@@ -114,7 +114,7 @@ def writeTemperatures(temp, dtemp=None, coordsys='cyclindrical', ndim=2):
     temp.append('void temperature(double x, double y, double z, double *temperature) {\n\n')
     interp.writeCoords(temp, coordsys, ndim)
 
-    temp.append('\ttemperature[0] = findvalue(cone, ctwo, cthree, temp);\n')
+    temp.append('\ttemperature[0] = findvalue(c1, c2, c3, temp);\n')
     temp.append('\tif (temperature[0] < 2.73) {\n\t\ttemperature[0] = 2.73;\n\t}\n\n')
 
     if type(dtemp) is float:
@@ -122,7 +122,7 @@ def writeTemperatures(temp, dtemp=None, coordsys='cyclindrical', ndim=2):
         temp.append('\tif (temperature[1] < 2.73){temperature[1] = 2.73;}\n')
 
     elif type(dtemp) is str:
-        temp.append('\ttemperature[1] = findvalue(cone, ctwo, cthree, %s);\n' % dtemp)
+        temp.append('\ttemperature[1] = findvalue(c1, c2, c3, %s);\n' % dtemp)
         temp.append('\tif (temperature[1] < 2.73) {\n\t\ttemperature[1] = 2.73;\n\t}\n')
 
     elif dtemp is not None:
@@ -146,9 +146,9 @@ def writeVelocityStructure(temp, stellarmass=None, coordsys='cyclindrical', ndim
         temp.append('\tvelocity[2] = 0.0;\n')
 
     else:
-        temp.append('\tvelocity[0] = findvalue(cone, ctwo, cthree, velx);\n')
-        temp.append('\tvelocity[1] = findvalue(cone, ctwo, cthree, vely);\n')
-        temp.append('\tvelocity[2] = findvalue(cone, ctwo, cthree, velz);\n')
+        temp.append('\tvelocity[0] = findvalue(c1, c2, c3, velx);\n')
+        temp.append('\tvelocity[1] = findvalue(c1, c2, c3, vely);\n')
+        temp.append('\tvelocity[2] = findvalue(c1, c2, c3, velz);\n')
         
     temp.append('\n}\n\n\n')
 

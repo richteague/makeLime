@@ -26,8 +26,8 @@ def seconds2hms(seconds):
 
 def runLime(chemheader, moldatfile, fileout, thetas, phis, transitions, nchan, velres, nmodels=1, pIntensity=1e4, sinkPoints=1e3, dust='jena_thin_e6.tab',
             antialias=1, sampling=2, outputfile=None, binoutputfile=None, gridfile=None, lte_only=1, imgres=0.05, distance=54., pxls=128,
-            unit=0, coordsys='cylindrical', ndim=2, opratio=None, dtemp=None, xmol=None, g2d=None, bvalue=50., btype='absolute', stellarmass=0.6,
-            cleanup=True, waittime=120, directory='../'):
+            unit=0, coordsys='cylindrical', opratio=None, dtemp=None, xmol=None, g2d=None, bvalue=50., btype='absolute', stellarmass=0.6,
+            cleanup=True, waittime=20, directory='../'):
 
     # Build, run and average multiple LIME models for a given chemical model.
 
@@ -40,10 +40,10 @@ def runLime(chemheader, moldatfile, fileout, thetas, phis, transitions, nchan, v
 
     # Create the temporary folder to work in.
     fname = makeUniqueFolder()
+    os.chdir(fname)
 
     # Move all appropriate files there.
     path = os.path.dirname(__file__) + '/AuxFiles'
-    os.chdir(fname)
     os.system('cp ../%s .' % chemheader)
     os.system('cp %s/%s .' % (path, moldatfile))
     os.system('cp %s/%s .' % (path, dust))
@@ -73,7 +73,7 @@ def runLime(chemheader, moldatfile, fileout, thetas, phis, transitions, nchan, v
         make.makeModelFile(chemheader=chemheader, moldatfile=moldatfile, thetas=thetas, phis=phis, transitions=transitions, nchan=nchan, velres=velres,
                            pIntensity=pIntensity, sinkPoints=sinkPoints, dust=dust, antialias=antialias, sampling=sampling, outputfile=toutputfile, 
                            binoutputfile=binoutputfile, gridfile=gridfile, lte_only=lte_only, imgres=imgres, distance=distance, pxls=pxls, unit=unit,
-                           coordsys=coordsys, ndim=ndim, opratio=opratio, dtemp=dtemp, xmol=xmol, g2d=g2d, bvalue=bvalue, btype=btype,
+                           coordsys=coordsys, opratio=opratio, dtemp=dtemp, xmol=xmol, g2d=g2d, bvalue=bvalue, btype=btype,
                            stellarmass=stellarmass, modelnumber=m)
 
         # Run the file.
@@ -90,7 +90,11 @@ def runLime(chemheader, moldatfile, fileout, thetas, phis, transitions, nchan, v
             print 'Waiting on %d models to run.' % newremaining
             remaining = newremaining
         time.sleep(60*remaining)
-    print 'All instances complete.'
+    if len([fn for fn in os.listdir('./') if fn.endswith('.fits')]) < nmodels:
+        print 'Not all models were successfully run. Aborting without clean-up.'
+        return
+    else:
+        print 'All instances complete.'
 
 
     # If more than one model is run, average them.
@@ -109,6 +113,7 @@ def runLime(chemheader, moldatfile, fileout, thetas, phis, transitions, nchan, v
     
 
     # Move the model out and then, if required, clear the folder.
+    os.chdir('../')
     if cleanup:
         print 'Cleaning up temporary folders.'
         os.system('rm -rf %s' % fname)

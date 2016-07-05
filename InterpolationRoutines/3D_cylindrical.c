@@ -2,22 +2,6 @@
 // findcell     - finds the bounding indices.
 // linterpolate - linear interpolation.
 
-double findvalue(double c1, double c2, double c3, const double arr[NCELLS]){
-
-    // Finds the bounding cells and linerally interpolates their value.
-
-    int aidx, bidx, cidx, didx, eidx, fidx, gidx, hidx;
-
-    findcell(c1, c2, c3, &aidx, &bidx, &cidx, &didx, &eidx, &fidx, &gidx, &hidx);
-
-    if (aidx >= 0) {
-        return linterpolate(c1, c2, c3, aidx, bidx, cidx, didx,
-                            eidx, fidx, gidx, hidx, arr);
-    } else {
-        return -1.;
-    }
-}
-
 
 void findcell(double c1, double c2, double c3, int *aidx, int *bidx, int *cidx,
               int *didx, int *eidx, int *fidx, int *gidx, int *hidx) {
@@ -185,3 +169,19 @@ double linterpolate(double c1, double c2, double c3, int aidx, int bidx, int cid
 
 }
 
+
+double findvalue(double c1, double c2, double c3, const double arr[NCELLS]){
+
+    // Finds the bounding cells and linerally interpolates their value.
+
+    int aidx, bidx, cidx, didx, eidx, fidx, gidx, hidx;
+
+    findcell(c1, c2, c3, &aidx, &bidx, &cidx, &didx, &eidx, &fidx, &gidx, &hidx);
+
+    if (aidx >= 0) {
+        return linterpolate(c1, c2, c3, aidx, bidx, cidx, didx,
+                            eidx, fidx, gidx, hidx, arr);
+    } else {
+        return -1.;
+    }
+}

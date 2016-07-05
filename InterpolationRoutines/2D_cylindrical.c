@@ -2,27 +2,25 @@
 // findcell     - finds the bounding indices.
 // linterpolate - linear interpolation.
 
-double findvalue(double c1, double c2, double c3, const double arr[NCELLS]){
-
-    // Finds the bounding cells and linearlly interpolates their value.
-
-    int aidx, bidx, cidx, didx;
-
-    findcell(c1, c2, &aidx, &bidx, &cidx, &didx);
-
-    if (aidx >= 0) {
-        return linterpolate(c1, c2, aidx, bidx, cidx, didx, arr);
-    } else {
-        return -1.;
-    }
-
-}
-
 
 void findcell(double c1, double c2, int *aidx, int *bidx, int *cidx, int *didx){
 
     double c1lower, c1upper;
     int i = 0;
+
+    // Find the bounding radial points.
+
+    i = 0;
+    while (c1arr[i] < c1) {
+        if (i == NCELLS - 1) {
+            *aidx = -1;
+            return;
+        }
+        i++;
+    }    
+
+    c1lower = c1arr[i-1];
+    c1upper = c1arr[i];
 
     // Find the bounds of the vertical points at the lower radial position.
 
@@ -41,7 +39,7 @@ void findcell(double c1, double c2, int *aidx, int *bidx, int *cidx, int *didx){
     }
 
     *bidx = i;
-    *aidx = i -1;
+    *aidx = i-1;
 
     // Find the bounds of the vertical points at the upper radial position.
 
@@ -54,7 +52,7 @@ void findcell(double c1, double c2, int *aidx, int *bidx, int *cidx, int *didx){
         }
     }
 
-    if (c1arr[i] != c1lower) {
+    if (c1arr[i] != c1upper) {
         *aidx = -1;
         return;
     }
@@ -80,5 +78,24 @@ double linterpolate(double c1, double c2, int aidx, int bidx, int cidx,
 
     f = (c1 - c1arr[aidx]) / (c1arr[cidx] - c1arr[aidx]);
     return A * (1. - f) + B * f;
+
+}
+
+
+double findvalue(double c1, double c2, double c3, const double arr[NCELLS]){
+
+    // Finds the bounding cells and linearlly interpolates their value.
+
+    double value;
+    int aidx, bidx, cidx, didx;
+
+    findcell(c1, c2, &aidx, &bidx, &cidx, &didx);
+
+    if (aidx >= 0) {
+        value = linterpolate(c1, c2, aidx, bidx, cidx, didx, arr);
+        return value;
+    } else {
+        return -1.;
+    }
 
 }
