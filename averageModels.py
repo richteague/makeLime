@@ -13,15 +13,15 @@ def averageModels(nmodels, thetas, phis, transitions, fileout,
         for p in phis:
             for j in transitionsi:
                     
-            toaverage = np.array([fits.getdata('%d_%.3f_%.3f_%d.fits' % (m, t, p, j), 0) for m in range(nmodels)])
-            averaged = np.average(toaverage, axis=0)
-            hdulist = fits.open('0_%.3f_%.3f_%d.fits' % (t, p, j))
-            hdulist[0].data = averaged
-            hdulist.writeto(fileout+'_%.3f_%.3f_%d.fits' % (t, p, j))
-            os.system('mv %s_%.3f_%.3f_%d.fits %s' % (fileout, t, p, j, directory))
+                toaverage = np.array([fits.getdata('%d_%.3f_%.3f_%d.fits' % (m, t, p, j), 0) for m in range(nmodels)])
+                averaged = np.average(toaverage, axis=0)
+                hdulist = fits.open('0_%.3f_%.3f_%d.fits' % (t, p, j))
+                hdulist[0].data = averaged
+                hdulist.writeto(fileout+'_%.3f_%.3f_%d.fits' % (t, p, j))
+                os.system('mv %s_%.3f_%.3f_%d.fits %s' % (fileout, t, p, j, directory))
                  
-            if returnnoise:
-                getNoise(nmodels, thetas, phis, transitions, fileout, directory)
+                if returnnoise:
+                    getNoise(nmodels, thetas, phis, transitions, fileout, directory)
 
     return
 
