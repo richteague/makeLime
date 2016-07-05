@@ -17,14 +17,11 @@ def averageModels(nmodels, thetas, phis, transitions, fileout,
                 averaged = np.average(toaverage, axis=0)
                 hdulist = fits.open('0_%.3f_%.3f_%d.fits' % (t, p, j))
                 hdulist[0].data = averaged
-
                 filename = fileout + '_%.3f_%.3f_%d.fits' % (t, p, j)
-
                 hdulist.writeto(filename)
                 fits.setval(filename, 'NMODELS', value='%d' % nmodels, comment='Number of models averaged over.')
                 os.system('mv %s %s' % (filename, directory))
                 
-    
                 if returnnoise:
                     getNoise(nmodels, thetas, phis, transitions, fileout, directory)
 

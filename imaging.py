@@ -31,7 +31,7 @@ def writeImageParameters(temp, radius, minScale, moldatfile, thetas, phis, trans
     for i, theta in enumerate(thetas):
         for p, phi in enumerate(phis):
             for t, trans in enumerate(transitions):
-                nimg = int(i*len(thetas)*len(phis) + p*len(phis) + t)
+                nimg = int(i*len(transitions)*len(phis) + p*len(transitions) + t)
                 writeImageBlock(temp, nimg, modelnumber, theta, phi, trans, nchan,
                                 velres, imgres, distance, pxls, unit)
 
