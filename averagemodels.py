@@ -32,7 +32,7 @@ def getNoise(nmodels, thetas, phis, transitions, fileout, directory='./'):
 
     for t in thetas:
         for p in phis:
-            for j in transitionsi:
+            for j in transitions:
                 toaverage = np.array([fits.getdata('%d_%.3f_%.3f_%d.fits' % (m, t, p, j), 0) for m in range(nmodels)])
                 gridnoise = np.std(toaverage, axis=0)
                 hdulist = fits.open('0_%.3f_%.3f_%d.fits' % (t, p, j))

@@ -98,7 +98,7 @@ def runLime(chemheader, moldatfile, fileout, thetas, phis, transitions, nchan, v
     if fileout[-5:] == '.fits':
         fileout = fileout[:-5]
     if nmodels > 1:
-        import averageModels as avg
+        import averagemodels as avg
         avg.averageModels(nmodels, thetas, phis, transitions, fileout,
                           returnnoise=False, directory=directory)
     else:

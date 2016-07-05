@@ -42,7 +42,7 @@ def writeImageParameters(temp, radius, minScale, moldatfile, thetas, phis, trans
 
 
 def writeImageBlock(temp, nimg, modelnumber, theta, phi, trans, nchan, velres,
-                    imgres=0.035, distance=54., pxls=128, unit=0):
+                    imgres=0.05, distance=54., pxls=128, unit=0):
    
     # Filename following convention. 
     filename = '%s_%.3f_%.3f_%d' % (modelnumber, theta, phi, trans)
