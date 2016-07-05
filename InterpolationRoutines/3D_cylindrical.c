@@ -1,12 +1,11 @@
 // findvalue    - wrapper for the findcell and interpolation functions.
 // findcell     - finds the bounding indices.
-// linterpolate - linear interpolation .
+// linterpolate - linear interpolation.
 
 double findvalue(double c1, double c2, double c3, const double arr[NCELLS]){
 
     // Finds the bounding cells and linerally interpolates their value.
 
-    double value_a, value_b;
     int aidx, bidx, cidx, didx, eidx, fidx, gidx, hidx;
 
     findcell(c1, c2, c3, &aidx, &bidx, &cidx, &didx, &eidx, &fidx, &gidx, &hidx);
@@ -45,7 +44,7 @@ void findcell(double c1, double c2, double c3, int *aidx, int *bidx, int *cidx,
     // For each of the phi slices, do as in the 2D case.
     // Find the bounds of the radial points, lower phi position.
 
-    i = 0
+    i = 0;
     for (i=0; i<(NCELLS-1); i=i+1) {
         if (c3arr[i] == c3lower && c3arr[i-1] == c3lower) {
             if ((c1arr[i]-c1) * (c1arr[i-1]-c1) < 0.) {
