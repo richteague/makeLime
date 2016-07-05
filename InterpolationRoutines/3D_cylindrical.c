@@ -4,10 +4,10 @@
 
 double findvalue(double c1, double c2, double c3, const double arr[NCELLS]){
 
+    // Finds the bounding cells and linerally interpolates their value.
+
     double value_a, value_b;
     int aidx, bidx, cidx, didx, eidx, fidx, gidx, hidx;
-
-    // Find the bounding cells.
 
     findcell(c1, c2, c3, &aidx, &bidx, &cidx, &didx, &eidx, &fidx, &gidx, &hidx);
 
@@ -152,6 +152,8 @@ void findcell(double c1, double c2, double c3, int *aidx, int *bidx, int *cidx,
 
 double linterpolate(double c1, double c2, double c3, int aidx, int bidx, int cidx, int didx, 
                     int eidx, int fidx, int gidx, int hidx, const double arr[NCELLS]) {
+
+    // Three dimensional, linear interpolation.
 
     double A, B, C, D, f;
 
