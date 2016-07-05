@@ -11,6 +11,7 @@ def writeImageParameters(temp, radius, minScale, moldatfile, thetas, phis, trans
     # Include the radiative transfer parameters.
     temp.append('\tpar->radius = %.1f*AU;\n' % radius)
     temp.append('\tpar->minScale = %.2f*AU;\n' % minScale)
+    temp.append('\tpar->pIntensity = %.0f;\n' % pIntensity)
     temp.append('\tpar->sinkPoints = %.0f;\n' % sinkPoints)
     temp.append('\tpar->dust = "%s";\n' % dust)
     temp.append('\tpar->moldatfile[0] = "%s";\n' % moldatfile)

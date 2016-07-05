@@ -10,7 +10,7 @@ def writeCoords(temp, coordsys='cylindrical', ndim=2):
     if coordsys is 'cylindrical':
         if ndim is 2:
             temp.append('\tdouble cone = sqrt(x*x + y*y) / AU;\n')
-            temp.append('\tdouble ctwo = atan2(y, x);\n')
+            temp.append('\tdouble ctwo = fabs(z) / AU;\n')
             temp.append('\tdouble cthree = 0.;\n\n')
 
     return

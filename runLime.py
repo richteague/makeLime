@@ -77,7 +77,7 @@ def runLime(chemheader, moldatfile, thetas, phis, transitions, nchan, velres, nm
                            stellarmass=stellarmass, modelnumber=m)
 
         # Run the file.
-        os.system('nohup lime -n -f -p 20 %d.c >nohup_%d.out 2>&1 &' % (m, m))
+        os.system('nohup lime -n -f -p 20 model_%d.c >nohup_%d.out 2>&1 &' % (m, m))
         time.sleep(waittime)
 
 

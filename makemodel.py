@@ -18,7 +18,7 @@ def makeModelFile(chemheader, moldatfile, thetas, phis, transitions, nchan, velr
 
     # Calculate the radius, minScale and ncells from the chemheader.
     import chemicalheader as ch
-    radius, minScale, ncells = ch.valsfromheader(chemheader)
+    minScale, radius, ncells = ch.valsfromheader(chemheader)
 
     # Include the imaging parameters.
     import imaging as im
