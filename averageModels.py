@@ -9,9 +9,8 @@ from astropy.io import fits
 # the gridding. If there's only one model, just rename it.
 
 def averageModels(nmodels, thetas, phis, transitions, fileout,
-                  returnnoise=True, directory='../', popfile=False):
+                  returnnoise=False, directory='../'):
 
-    if nmodels > 1:
         for t in thetas:
             for p in phis:
                 for j in transitions:
@@ -32,28 +31,25 @@ def averageModels(nmodels, thetas, phis, transitions, fileout,
                         hdulist = fits.open('0_%.3f_%.3f_%d.fits' % (t, p, j))
                         hdulist[0].data = gridnoise
                         hdulist.writeto(fileout+'_%.3f_%.3f_%d_noise.fits' % (t, p, j))
-                        os.system('mv %s_%.3f_%.3f_%d_noise.fits %s' % (fileout, t, p, j, directory))
-                        
+                        os.system('mv %s_%.3f_%.3f_%d_noise.fits %s' % (fileout, t, p, j, directory))         
+
+                        # Update this text!
+ 
                         print 'For inclination: %.2f,' % t
                         print 'position angle: %.2f,' % p
                         print 'and transition: %d,' % j
                         print 'we have a mean fractional grid noise of: %.5e [units].' % (np.nanmean(gridnoise/averaged))
                         print 'Through averaging we reduce this to: %.5e [units].' % (np.nanmean(gridnoise/averaged)/np.sqrt(nmodels))
-        
-
-
-    else:
-        for t in thetas:
-            for p in phis:
-                for j in transitions:
-                    os.system('mv 0_%.3f_%.3f_%d.fits %s%s_%.3f_%.3f_%d.fits' % (t, p, j, directory, fileout, t, p, j))
-
     
-    # Combine all the population files into one and save as a Python binary file.
-    if popfile:
-        popfiles = np.vstack([np.loadtxt('popfile_%d.out' % m) for m in range(nmodels)]).T
-        popfiles[:3] /= sc.au
-        np.save('%s%s_popfile' % (directory, fileout), popfiles)
-
     return
 
+
+def combinePopfiles(nmodels, fileout, directory='../'):
+        
+    # Combine all the popfiles from the averaged models.
+
+    popfiles = np.vstack([np.loadtxt('popfile_%d.out' % m) for m in range(nmodels)]).T
+    popfiles[:3] /= sc.au
+    np.save('%s%s_popfile' % (directory, fileout), popfiles)
+
+    return 

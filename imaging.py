@@ -3,7 +3,7 @@
 def writeImageParameters(temp, radius, minScale, moldatfile, thetas, phis, transitions, nchan,
                          velres, pIntensity=1e4, sinkPoints=1e3, dust='jena_thin_e6.tab', antialias=1,
                          sampling=2, outputfile=None, binoutputfile=None, gridfile=None, lte_only=1,
-                         imgres=0.035, distance=54., pxls=128, unit=0, modelnumber=0):
+                         imgres=0.05, distance=54., pxls=128, unit=0, modelnumber=0):
 
 
     temp.append('void input(inputPars *par, image *img){\n\n')
