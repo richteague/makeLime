@@ -5,6 +5,37 @@ Scripts to make running LIME models more efficient.
 ---
 ---
 
+## averageModels.py
+
+Averages the ensemble of models run if `nmodels > 1`. Has basic options to return noise maps to understand the MC noise.
+
+---
+
+```python
+averageModels(nmodels, thetas, phis, transitions, fileout, returnnoise=False, directory='../')
+```
+
+All parameters as described in `makemodel.py`.
+
+---
+
+```python
+combinePopfiles(nmodels, fileout, directory='../')
+```
+
+If multiple models are run, all producing outputfiles, this combines them into a single file.
+
+---
+
+```python
+getNoise(nmodels, thetas, phis, transitions, fileout, directory='./')
+```
+
+Returns the standard deviation map for the ensemble of models. This is useful to understand how the MC noise affects the data.
+
+---
+---
+
 ## makemodel.py
 
 Creates `model.c` using the functions specified below. _*NOT YET FINISHED*_
