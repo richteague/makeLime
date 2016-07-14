@@ -19,11 +19,11 @@ def writeImageParameters(temp, radius, minScale, moldatfile, thetas, phis, trans
     temp.append('\tpar->sampling = %d;\n' % sampling)
     temp.append('\tpar->lte_only = %d;\n' % lte_only)
     if outputfile is not None:
-        temp.append('\tpar->outputfile = "%s";\n' % outputfile)
+        temp.append('\tpar->outputfile = "outputfile_%d.out";\n' % modelnumber)
     if binoutputfile is not None:
-        temp.append('\tpar->binoutputfile = "%s";\n' % binoutputfile)
+        temp.append('\tpar->binoutputfile = "binoutputfile_%d.out";\n' % binoutputfile)
     if gridfile is not None:
-        temp.append('\tpar->gridfile = "%s";\n' % gridfile)
+        temp.append('\tpar->gridfile = "%s.out";\n' % gridfile)
     temp.append('\n')
 
 

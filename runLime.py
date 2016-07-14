@@ -54,25 +54,9 @@ def runLime(chemheader, moldatfile, fileout, thetas, phis, transitions, nchan, v
     for m in range(nmodels):
         print 'Running model %d of %d.' % (m+1, nmodels)
 
-        # Make sure the file outputs are not over written.
-        if outputfile is not None:
-            toutputfile = outputfile + '_%d' % m 
-        else:
-            toutputfile = None
-
-        if binoutputfile is not None:
-            tbinoutputfile = binoutputfile + '_%d' % m 
-        else:
-            tbinoutputfile = None
-
-        if gridfile is not None:
-            tgridfile = gridfile + '_%d' % m 
-        else:
-            tgridfile = None
-
         # Make the model.c file.
         make.makeModelFile(chemheader=chemheader, moldatfile=moldatfile, thetas=thetas, phis=phis, transitions=transitions, nchan=nchan, velres=velres,
-                           pIntensity=pIntensity, sinkPoints=sinkPoints, dust=dust, antialias=antialias, sampling=sampling, outputfile=toutputfile, 
+                           pIntensity=pIntensity, sinkPoints=sinkPoints, dust=dust, antialias=antialias, sampling=sampling, outputfile=outputfile, 
                            binoutputfile=binoutputfile, gridfile=gridfile, lte_only=lte_only, imgres=imgres, distance=distance, pxls=pxls, unit=unit,
                            coordsys=coordsys, opratio=opratio, dtemp=dtemp, xmol=xmol, g2d=g2d, bvalue=bvalue, btype=btype,
                            stellarmass=stellarmass, modelnumber=m)
@@ -106,6 +90,9 @@ def runLime(chemheader, moldatfile, fileout, thetas, phis, transitions, nchan, v
         import averagemodels as avg
         avg.averageModels(nmodels, thetas, phis, transitions, fileout,
                           returnnoise=False, directory=directory)
+
+        if outputfile is not None:
+            avg.combinePopfiles(nmodels, outputfile, directory)
 
     else:
         for t in thetas:

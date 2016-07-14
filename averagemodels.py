@@ -45,14 +45,17 @@ def getNoise(nmodels, thetas, phis, transitions, fileout, directory='./'):
     return 
 
 
-'''
+
 def combinePopfiles(nmodels, fileout, directory='../'):
         
     # Combine all the popfiles from the averaged models.
 
-    popfiles = np.vstack([np.loadtxt('%s_output_%d.out' % (fileout, m) for m in range(nmodels)]).T
+    popfiles = np.vstack([np.loadtxt('outputfile_%d.out' % m) for m in range(nmodels)]).T
     popfiles[:3] /= sc.au
-    np.save('%s%s_popfile.out' % (directory, fileout), popfiles)
+    i = 0
+    while (i < len(fileout) and fileout[i] != '.'):
+        i += 1
+    np.save('%s%s' % (directory, fileout), popfiles)
 
     return 
-'''
+
