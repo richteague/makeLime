@@ -1,38 +1,59 @@
 import fileinput
 import numpy as np
 import scipy.constants as sc
-
+import re
 
 # Reads the inner and outer radial points to define LIME's 
 # computational domain. Reads in the number of cells for the
-# interpolate routine. Assumes that rvals is the first line 
-# and zvals is the second.
+# interpolate routine. 
 
-def valsfromheader(headername):
+def valsfromheader(headername, coordsys='cylindrical'):
+
     tempname = headername
     if tempname[-2:] != '.h':
         tempname += '.h'
     with open('../'+tempname) as f:
         header = f.readlines()
-    i = 18
+
+    # Find the numer of cells.
+    i = 0
     while header[0][i] != ']':
         if header[0][i] == '[':
             j = i
         i += 1
     ncells= int(header[0][j+1:i])
-    while header[0][i] != ',':
-        if header[0][i] == '{':
-            j = i
-        i += 1
-    rin = float(header[0][j+1:i])
-    i = -2
-    while header[0][i] != ',':
-        i -= 1
-    rout = float(header[0][i+2:-3])
-    i = -2
-    while header[1][i] != ',':
-        i -= 1
-    rout = np.hypot(float(header[1][i+2:-3]), rout)
+
+    # Calculate the minimum and maximum values.
+    # Find the indices of the c1arr and c2arr.
+    
+    arrnames = arrsfromheader(headername)
+    c1 = arrnames.index('c1arr')
+    c2 = arrnames.index('c2arr')
+
+    if coordsys is 'cylindrical':
+        while header[c1][i-1] != '{':
+            i += 1
+        rvals = header[c1][i:-3] 
+        rvals = np.array([float(v) for v in re.split(', ', rvals)])
+        i = 0
+        while header[c2][i-1] != '{':
+            i += 1
+        zvals = header[c2][i:-3]
+        zvals = np.array([float(v) for v in re.split(', ', zvals)])        
+        rin = np.nanmin(np.hypot(rvals, zvals))
+        rout = np.nanmax(np.hypot(rvals, zvals))
+
+    elif coordsys is 'polar':
+        while header[c1][i-1] != '{':
+            i += 1
+        rvals = header[c1][i:-3] 
+        rvals = np.array([float(v) for v in re.split(', ', rvals)])
+        rin = np.nanmin(rvals)
+        rout = np.nanmax(rvals)
+
+    else:
+        raise ValueError
+
     return rin, rout, ncells
 
 
@@ -45,7 +66,7 @@ def arrsfromheader(headername):
         tempname += '.h'
     with open('../'+tempname) as f:
         header = f.readlines()
-    return np.array([parsename(line) for line in header])
+    return [parsename(line) for line in header]
 
 
 # Parses the array name from a C array declaration.

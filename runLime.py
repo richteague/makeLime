@@ -105,12 +105,14 @@ def runLime(chemheader, moldatfile, fileout, thetas, phis, transitions, nchan, v
         import averagemodels as avg
         avg.averageModels(nmodels, thetas, phis, transitions, fileout,
                           returnnoise=False, directory=directory)
+
     else:
         for t in thetas:
             for p in phis:
                 for j in transitions:
                     os.system('mv *.fits %s/%s_%.3f_%.3f_%d.fits' % (directory, fileout, t, p, j))
     
+   
 
     # Move the model out and then, if required, clear the folder.
     os.chdir('../')

@@ -23,7 +23,10 @@ def makeModelFile(chemheader, moldatfile, thetas, phis, transitions, nchan, velr
         ndim = 3
     else:
         ndim = 2
-
+    if modelnumber == 0:
+        print '\nAssuming input is %dD-%s coordinates.' % (ndim, coordsys)
+        print 'Found minScale = %.2f au and radius = %.2f au.\n' % (minScale, radius) 
+    
     # Include the imaging parameters.
     import imaging as im
     im.writeImageParameters(tempfile, radius=radius, minScale=minScale, moldatfile=moldatfile, modelnumber=modelnumber, 
@@ -41,12 +44,12 @@ def makeModelFile(chemheader, moldatfile, thetas, phis, transitions, nchan, velr
 
     # Include the model functions.
     import physicalstructure as ps
-    ps.writeDensity(tempfile, opratio, coordsys, ndim)
-    ps.writeTemperatures(tempfile, dtemp, coordsys, ndim)
-    ps.writeAbundance(tempfile, xmol, opratio, coordsys, ndim)
-    ps.writeGastoDust(tempfile, g2d, coordsys, ndim)
-    ps.writeDopplerBroadening(tempfile, bvalue, btype, coordsys, ndim)
-    ps.writeVelocityStructure(tempfile, stellarmass, coordsys, ndim)
+    ps.writeDensity(tempfile, opratio, coordsys=coordsys, ndim=ndim)
+    ps.writeTemperatures(tempfile, dtemp, coordsys=coordsys, ndim=ndim)
+    ps.writeAbundance(tempfile, xmol, opratio, coordsys=coordsys, ndim=ndim)
+    ps.writeGastoDust(tempfile, g2d, coordsys=coordsys, ndim=ndim)
+    ps.writeDopplerBroadening(tempfile, bvalue, btype, coordsys=coordsys, ndim=ndim)
+    ps.writeVelocityStructure(tempfile, stellarmass, coordsys=coordsys, ndim=ndim)
     
 
     # Save the output.
