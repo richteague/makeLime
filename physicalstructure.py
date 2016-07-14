@@ -4,7 +4,7 @@ import interpolation as interp
 
 
 # Write the molecular abundances.
-def writeAbundance(temp, xmol=None, opratio=None, coordsys='cylindrical', ndim=2):
+def writeAbundance(temp, coordsys, ndim, xmol=None, opratio=None):
 
     temp.append('void abundance(double x, double y, double z, double *abundance) {\n\n')    
     interp.writeCoords(temp, coordsys, ndim)
@@ -34,7 +34,7 @@ def writeAbundance(temp, xmol=None, opratio=None, coordsys='cylindrical', ndim=2
     return
 
 # Write the main collider density.
-def writeDensity(temp, opratio=None, coordsys='cylindrical', ndim=2): 
+def writeDensity(temp, coordsys, ndim, opratio=None): 
 
     temp.append('void density(double x, double y, double z, double *density) {\n\n')
     interp.writeCoords(temp, coordsys, ndim)
@@ -64,7 +64,7 @@ def writeDensity(temp, opratio=None, coordsys='cylindrical', ndim=2):
 
 
 # Write the doppler broadening component.
-def writeDopplerBroadening(temp, bvalue=0., btype='absolute', coordsys='cylindrical', ndim=2):
+def writeDopplerBroadening(temp, coordsys, ndim, bvalue=0., btype='absolute'):
 
     #Check that the broadening type is correct.
     if not (btype is 'absolute' or btype is 'mach'):
@@ -88,7 +88,7 @@ def writeDopplerBroadening(temp, bvalue=0., btype='absolute', coordsys='cylindri
 
 
 # Write the gas-to-dust ratio.
-def writeGastoDust(temp, g2d=None, ming2d=1., coordsys='cylindrical', ndim=2):
+def writeGastoDust(temp, coordsys, ndim, g2d=None, ming2d=1.):
 
     if g2d is None:
         return
@@ -109,7 +109,7 @@ def writeGastoDust(temp, g2d=None, ming2d=1., coordsys='cylindrical', ndim=2):
 
 
 # Write the gas and dust temperatures.
-def writeTemperatures(temp, dtemp=None, coordsys='cylindrical', ndim=2):
+def writeTemperatures(temp, coordsys, ndim, dtemp=None):
 
     temp.append('void temperature(double x, double y, double z, double *temperature) {\n\n')
     interp.writeCoords(temp, coordsys, ndim)
@@ -134,7 +134,7 @@ def writeTemperatures(temp, dtemp=None, coordsys='cylindrical', ndim=2):
 
 
 # Write the bulk velocity structure.
-def writeVelocityStructure(temp, stellarmass=None, coordsys='cylindrical', ndim=2):
+def writeVelocityStructure(temp, coordsys, ndim, stellarmass=None):
 
     temp.append('void velocity(double x, double y, double z, double *velocity) {\n\n')
 

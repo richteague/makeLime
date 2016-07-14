@@ -40,12 +40,12 @@ def makeModelFile(chemheader, moldatfile, thetas, phis, transitions, nchan, velr
 
     # Include the model functions.
     import physicalstructure as ps
-    ps.writeDensity(tempfile, opratio, coordsys=coordsys, ndim=ndim)
-    ps.writeTemperatures(tempfile, dtemp, coordsys=coordsys, ndim=ndim)
-    ps.writeAbundance(tempfile, xmol, opratio, coordsys=coordsys, ndim=ndim)
-    ps.writeGastoDust(tempfile, g2d, coordsys=coordsys, ndim=ndim)
-    ps.writeDopplerBroadening(tempfile, bvalue, btype, coordsys=coordsys, ndim=ndim)
-    ps.writeVelocityStructure(tempfile, stellarmass, coordsys=coordsys, ndim=ndim)
+    ps.writeDensity(tempfile, coordsys, ndim, opratio)
+    ps.writeTemperatures(tempfile, coordsys, ndim, dtemp)
+    ps.writeAbundance(tempfile, coordsys, ndim, xmol, opratio)
+    ps.writeGastoDust(tempfile, coordsys, ndim, g2d)
+    ps.writeDopplerBroadening(tempfile, coordsys, ndim, bvalue, btype)
+    ps.writeVelocityStructure(tempfile, coordsys, ndim, stellarmass)
     
 
     # Save the output.
