@@ -80,7 +80,7 @@ def writeDopplerBroadening(temp, bvalue=0., btype='absolute', coordsys='cylindri
         # Constant mach number.
         temp.append('\tdouble val[2];\n')
         temp.append('\ttemperature(x, y, z, &val[2]);\n')
-        temp.append('\t%.2f * sqrt(KBOLTZ * val[0] / 2.34 / AMU);\n')
+        temp.append('\t*doppler = %.2f * sqrt(KBOLTZ * val[0] / 2.34 / AMU);\n' % bvalue)
         
     temp.append('\n}\n\n\n')
 

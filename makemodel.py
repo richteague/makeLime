@@ -18,11 +18,7 @@ def makeModelFile(chemheader, moldatfile, thetas, phis, transitions, nchan, velr
 
     # Calculate the radius, minScale and ncells from the chemheader.
     import chemicalheader as ch
-    minScale, radius, ncells = ch.valsfromheader(chemheader)
-    if 'c3arr' in ch.arrsfromheader(chemheader):
-        ndim = 3
-    else:
-        ndim = 2
+    minScale, radius, ncells, ndim = ch.valsfromheader(chemheader)
     if modelnumber == 0:
         print '\nAssuming input is %dD-%s coordinates.' % (ndim, coordsys)
         print 'Found minScale = %.2f au and radius = %.2f au.\n' % (minScale, radius) 

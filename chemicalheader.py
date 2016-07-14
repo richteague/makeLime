@@ -29,6 +29,10 @@ def valsfromheader(headername, coordsys='cylindrical'):
     arrnames = arrsfromheader(headername)
     c1 = arrnames.index('c1arr')
     c2 = arrnames.index('c2arr')
+    if 'c3arr' in arrnames:
+        ndim = 3
+    else:
+        ndim = 2
 
     if coordsys is 'cylindrical':
         while header[c1][i-1] != '{':
@@ -54,7 +58,7 @@ def valsfromheader(headername, coordsys='cylindrical'):
     else:
         raise ValueError
 
-    return rin, rout, ncells
+    return rin, rout, ncells, ndim
 
 
 # Reads the array names from the header file.

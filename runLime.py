@@ -50,6 +50,7 @@ def runLime(chemheader, moldatfile, fileout, thetas, phis, transitions, nchan, v
 
 
     # For each iteration, run a model with a pause of waittime seconds.
+    print '\n'
     for m in range(nmodels):
         print 'Running model %d of %d.' % (m+1, nmodels)
 
@@ -91,10 +92,10 @@ def runLime(chemheader, moldatfile, fileout, thetas, phis, transitions, nchan, v
             remaining = newremaining
         time.sleep(60*remaining)
     if len([fn for fn in os.listdir('./') if fn.endswith('.fits')]) < nmodels:
-        print 'Not all models were successfully run. Aborting without clean-up.'
+        print 'Not all models were successfully run. Aborting without clean-up.\n'
         return
     else:
-        print 'All instances complete.'
+        print 'All instances complete.\n'
 
 
     # If more than one model is run, average them.
