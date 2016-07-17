@@ -50,28 +50,13 @@ def runLime(chemheader, moldatfile, fileout, thetas, phis, transitions, nchan, v
 
 
     # For each iteration, run a model with a pause of waittime seconds.
+    print '\n'
     for m in range(nmodels):
         print 'Running model %d of %d.' % (m+1, nmodels)
 
-        # Make sure the file outputs are not over written.
-        if outputfile is not None:
-            toutputfile = outputfile + '_%d' % m 
-        else:
-            toutputfile = None
-
-        if binoutputfile is not None:
-            tbinoutputfile = binoutputfile + '_%d' % m 
-        else:
-            tbinoutputfile = None
-
-        if gridfile is not None:
-            tgridfile = gridfile + '_%d' % m 
-        else:
-            tgridfile = None
-
         # Make the model.c file.
         make.makeModelFile(chemheader=chemheader, moldatfile=moldatfile, thetas=thetas, phis=phis, transitions=transitions, nchan=nchan, velres=velres,
-                           pIntensity=pIntensity, sinkPoints=sinkPoints, dust=dust, antialias=antialias, sampling=sampling, outputfile=toutputfile, 
+                           pIntensity=pIntensity, sinkPoints=sinkPoints, dust=dust, antialias=antialias, sampling=sampling, outputfile=outputfile, 
                            binoutputfile=binoutputfile, gridfile=gridfile, lte_only=lte_only, imgres=imgres, distance=distance, pxls=pxls, unit=unit,
                            coordsys=coordsys, opratio=opratio, dtemp=dtemp, xmol=xmol, g2d=g2d, bvalue=bvalue, btype=btype,
                            stellarmass=stellarmass, modelnumber=m)
@@ -91,10 +76,10 @@ def runLime(chemheader, moldatfile, fileout, thetas, phis, transitions, nchan, v
             remaining = newremaining
         time.sleep(60*remaining)
     if len([fn for fn in os.listdir('./') if fn.endswith('.fits')]) < nmodels:
-        print 'Not all models were successfully run. Aborting without clean-up.'
+        print 'Not all models were successfully run. Aborting without clean-up.\n'
         return
     else:
-        print 'All instances complete.'
+        print 'All instances complete.\n'
 
 
     # If more than one model is run, average them.
@@ -105,12 +90,17 @@ def runLime(chemheader, moldatfile, fileout, thetas, phis, transitions, nchan, v
         import averagemodels as avg
         avg.averageModels(nmodels, thetas, phis, transitions, fileout,
                           returnnoise=False, directory=directory)
+
+        if outputfile is not None:
+            avg.combinePopfiles(nmodels, outputfile, directory)
+
     else:
         for t in thetas:
             for p in phis:
                 for j in transitions:
                     os.system('mv *.fits %s/%s_%.3f_%.3f_%d.fits' % (directory, fileout, t, p, j))
     
+   
 
     # Move the model out and then, if required, clear the folder.
     os.chdir('../')

@@ -4,7 +4,7 @@ import fileinput
 
 def writeCoords(temp, coordsys='cylindrical', ndim=2):
 
-    if not (coordsys is 'cylindrical' and ndim is 2):
+    if not (coordsys is 'cylindrical' and int(ndim) is 2):
         raise NotImplementedError
 
     if coordsys is 'cylindrical':

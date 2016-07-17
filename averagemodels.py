@@ -50,8 +50,12 @@ def combinePopfiles(nmodels, fileout, directory='../'):
         
     # Combine all the popfiles from the averaged models.
 
-    popfiles = np.vstack([np.loadtxt('popfile_%d.out' % m) for m in range(nmodels)]).T
+    popfiles = np.vstack([np.loadtxt('outputfile_%d.out' % m) for m in range(nmodels)]).T
     popfiles[:3] /= sc.au
-    np.save('%s%s_popfile' % (directory, fileout), popfiles)
+    i = 0
+    while (i < len(fileout) and fileout[i] != '.'):
+        i += 1
+    np.save('%s%s' % (directory, fileout), popfiles)
 
     return 
+

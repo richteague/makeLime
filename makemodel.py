@@ -18,12 +18,11 @@ def makeModelFile(chemheader, moldatfile, thetas, phis, transitions, nchan, velr
 
     # Calculate the radius, minScale and ncells from the chemheader.
     import chemicalheader as ch
-    minScale, radius, ncells = ch.valsfromheader(chemheader)
-    if 'c3arr' in ch.arrsfromheader(chemheader):
-        ndim = 3
-    else:
-        ndim = 2
-
+    minScale, radius, ncells, ndim = ch.valsfromheader(chemheader)
+    if modelnumber == 0:
+        print '\nAssuming input is %dD-%s coordinates.' % (ndim, coordsys)
+        print 'Found minScale = %.2f au and radius = %.2f au.\n' % (minScale, radius) 
+    
     # Include the imaging parameters.
     import imaging as im
     im.writeImageParameters(tempfile, radius=radius, minScale=minScale, moldatfile=moldatfile, modelnumber=modelnumber, 
@@ -41,12 +40,12 @@ def makeModelFile(chemheader, moldatfile, thetas, phis, transitions, nchan, velr
 
     # Include the model functions.
     import physicalstructure as ps
-    ps.writeDensity(tempfile, opratio, coordsys, ndim)
-    ps.writeTemperatures(tempfile, dtemp, coordsys, ndim)
-    ps.writeAbundance(tempfile, xmol, opratio, coordsys, ndim)
-    ps.writeGastoDust(tempfile, g2d, coordsys, ndim)
-    ps.writeDopplerBroadening(tempfile, bvalue, btype, coordsys, ndim)
-    ps.writeVelocityStructure(tempfile, stellarmass, coordsys, ndim)
+    ps.writeDensity(tempfile, coordsys, ndim, opratio)
+    ps.writeTemperatures(tempfile, coordsys, ndim, dtemp)
+    ps.writeAbundance(tempfile, coordsys, ndim, xmol, opratio)
+    ps.writeGastoDust(tempfile, coordsys, ndim, g2d)
+    ps.writeDopplerBroadening(tempfile, coordsys, ndim, bvalue, btype)
+    ps.writeVelocityStructure(tempfile, coordsys, ndim, stellarmass)
     
 
     # Save the output.

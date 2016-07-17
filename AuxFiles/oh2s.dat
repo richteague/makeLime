@@ -195,7 +195,7 @@ o-H2S  spectroscopy from JPL
 !NUMBER OF COLL PARTNERS
 2
 !COLLISIONS BETWEEN
-2 oH2O - pH2 from Dubernet et al (2009), assuming thermal o/p for H2, scaled to oH2S
+2 oH2O - pH2 from Dubernet et al (2009)
 !NUMBER OF COLL TRANS
 990
 !NUMBER OF COLLISION TEMPERATURES
