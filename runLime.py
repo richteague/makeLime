@@ -4,7 +4,7 @@ def makeUniqueFolder(fname='tempfolder', path='./'):
 
     # Make a unique folder.
 
-    import os 
+    import os
     if not os.path.isdir(path+fname):
         os.makedirs(path+fname)
     else:
@@ -24,12 +24,27 @@ def seconds2hms(seconds):
     h, m = divmod(m, 60)
     return '%d:%02d:%02d' % (h, m, s)
 
-def runLime(chemheader, moldatfile, fileout, thetas, phis, transitions, nchan, velres, nmodels=1, pIntensity=1e4, sinkPoints=1e3, dust='jena_thin_e6.tab',
+
+def runLime(chemheader, moldatfile, thetas, transitions, nchan, velres, fileout='temporary.fits', phis=[0], nmodels=1, pIntensity=1e4, sinkPoints=1e3, dust='jena_thin_e6.tab',
             antialias=1, sampling=2, outputfile=None, binoutputfile=None, gridfile=None, lte_only=1, imgres=0.05, distance=54., pxls=128,
             unit=0, coordsys='cylindrical', opratio=None, dtemp=None, xmol=None, g2d=None, bvalue=50., btype='absolute', stellarmass=0.6,
             cleanup=True, waittime=20, directory='../'):
 
     # Build, run and average multiple LIME models for a given chemical model.
+
+    # Make sure the lists of imaging parameters are lists.
+    if type(thetas) is not list:
+        thetas = [thetas]
+    if type(transitions) is not list:
+        transitions = [transitions]
+    if type(phis) is not list:
+        phis = [phis]
+    if coordsys not in ['cylindrical', 'polar']:
+        raise ValueError("Wrong coordsys value. Must be either 'cylindrical' or 'polar'.")
+    if btype not in ['absolute', 'mach']:
+        raise ValueError("Wrong btype value. Must be either 'absolute' or 'mach'.")
+    if opratio is not None:
+        raise NotImplementedError
 
     import os
     import sys
@@ -56,7 +71,7 @@ def runLime(chemheader, moldatfile, fileout, thetas, phis, transitions, nchan, v
 
         # Make the model.c file.
         make.makeModelFile(chemheader=chemheader, moldatfile=moldatfile, thetas=thetas, phis=phis, transitions=transitions, nchan=nchan, velres=velres,
-                           pIntensity=pIntensity, sinkPoints=sinkPoints, dust=dust, antialias=antialias, sampling=sampling, outputfile=outputfile, 
+                           pIntensity=pIntensity, sinkPoints=sinkPoints, dust=dust, antialias=antialias, sampling=sampling, outputfile=outputfile,
                            binoutputfile=binoutputfile, gridfile=gridfile, lte_only=lte_only, imgres=imgres, distance=distance, pxls=pxls, unit=unit,
                            coordsys=coordsys, opratio=opratio, dtemp=dtemp, xmol=xmol, g2d=g2d, bvalue=bvalue, btype=btype,
                            stellarmass=stellarmass, modelnumber=m)
@@ -99,8 +114,8 @@ def runLime(chemheader, moldatfile, fileout, thetas, phis, transitions, nchan, v
             for p in phis:
                 for j in transitions:
                     os.system('mv *.fits %s/%s_%.3f_%.3f_%d.fits' % (directory, fileout, t, p, j))
-    
-   
+
+
 
     # Move the model out and then, if required, clear the folder.
     os.chdir('../')
@@ -111,6 +126,5 @@ def runLime(chemheader, moldatfile, fileout, thetas, phis, transitions, nchan, v
 
     # Print the total time.
     print 'Finished in %s.\n\n' % seconds2hms(time.time() - t0)
-    
-    return
 
+    return
