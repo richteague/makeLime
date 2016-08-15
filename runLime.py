@@ -1,10 +1,15 @@
 ''' Script to run a batch of Lime jobs. '''
 
+import os
+import sys
+import time
+import makemodelfile as make
+import LIMEclass as lime
+import averagemodels as avg
+
+
+# Make a unique folder.
 def makeUniqueFolder(fname='tempfolder', path='./'):
-
-    # Make a unique folder.
-
-    import os
     if not os.path.isdir(path+fname):
         os.makedirs(path+fname)
     else:
@@ -16,23 +21,30 @@ def makeUniqueFolder(fname='tempfolder', path='./'):
     return fname
 
 
+# Convert seconds to hours, minutes, seconds.
 def seconds2hms(seconds):
-
-    # Convert seconds to hours, minutes, seconds.
-
     m, s = divmod(seconds, 60)
     h, m = divmod(m, 60)
     return '%d:%02d:%02d' % (h, m, s)
 
 
-def runLime(chemheader, moldatfile, thetas, transitions, nchan, velres, fileout='temporary.fits', phis=[0], nmodels=1, pIntensity=1e4, sinkPoints=1e3, dust='jena_thin_e6.tab',
-            antialias=1, sampling=2, outputfile=None, binoutputfile=None, gridfile=None, lte_only=1, imgres=0.05, distance=54., pxls=128,
-            unit=0, coordsys='cylindrical', opratio=None, dtemp=None, xmol=None, g2d=None, bvalue=50., btype='absolute', stellarmass=0.6,
-            cleanup=True, waittime=20, directory='../'):
+# Run LIME models.
+def runLime(chemheader, moldatfile, thetas, transitions, nchan, velres, 
+            fileout='temporary.fits', phis=[0], nmodels=1, pIntensity=1e4, 
+            sinkPoints=1e3, dust='jena_thin_e6.tab',
+            antialias=1, sampling=2, outputfile=None,
+            binoutputfile=None, gridfile=None, lte_only=1, imgres=0.05, 
+            distance=54., pxls=128,
+            unit=0, coordsys='cylindrical', opratio=None, dtemp=None, 
+            xmol=None, g2d=None, bvalue=50., btype='absolute', 
+            stellarmass=0.6, cleanup=True, waittime=20, directory='../'):
 
-    # Build, run and average multiple LIME models for a given chemical model.
+
+    if opratio is not None:
+        raise NotImplementedError('Still need work on this.')
 
     # Make sure the lists of imaging parameters are lists.
+
     if type(thetas) is not list:
         thetas = [thetas]
     if type(transitions) is not list:
@@ -40,49 +52,74 @@ def runLime(chemheader, moldatfile, thetas, transitions, nchan, velres, fileout=
     if type(phis) is not list:
         phis = [phis]
     if coordsys not in ['cylindrical', 'polar']:
-        raise ValueError("Wrong coordsys value. Must be either 'cylindrical' or 'polar'.")
+        raise ValueError("""Wrong coordsys value.
+                            Must be either 'cylindrical' or 'polar'.""")
     if btype not in ['absolute', 'mach']:
-        raise ValueError("Wrong btype value. Must be either 'absolute' or 'mach'.")
+        raise ValueError("""Wrong btype value.
+                            Must be either 'absolute' or 'mach'.""")
     if opratio is not None:
         raise NotImplementedError
 
-    import os
-    import sys
-    import time
-    import makemodel as make
 
     t0 = time.time()
 
-    # Create the temporary folder to work in.
+    # Create the temporary folder to work in and move there.
     fname = makeUniqueFolder()
     os.chdir(fname)
-
-    # Move all appropriate files there.
     path = os.path.dirname(__file__) + '/AuxFiles'
     os.system('cp ../%s .' % chemheader)
     os.system('cp %s/%s .' % (path, moldatfile))
     os.system('cp %s/%s .' % (path, dust))
 
 
+    # Generate a LIME model class instance.
+    model = lime.model(fileout=fileout,
+                       headerfile=headerfile,
+                       moldatfile=moldatfile,
+                       transitions=transitions, 
+                       thetas=thetas,
+                       nchan=nchan,
+                       velres=velres,
+                       pIntensity=pIntensity,
+                       sinkPoints=sinkPoints,
+                       antialias=antialias,
+                       sampling=sampling,
+                       lte_only=lte_only,
+                       imgres=imgres,
+                       distance=distance,
+                       pxls=pxls,
+                       unit=unit,
+                       stellarmass=stellarmass,
+                       outputfile=outputfile,
+                       binoutputfile=binoutputfile,
+                       gridfile=gridfile,
+                       opratio=opratio,
+                       dtemp=dtemp,
+                       xmol=xmol,
+                       g2d=g2d,
+                       bvalue=bvalue
+                       btype=btype,
+                       coordsys=coordsys,
+                       dust=dust,
+                       directory=directory,
+                       verbose=verbose,
+                       )
+                       
+    print '\nAssuming input is %dD-%s coordinates.' % (model.hdr.ndim, model.coordsys)
+    print 'Found minScale = %.2f au and radius = %.2f au.\n' % (model.hdr.rin, model.hdr.rout) 
+
     # For each iteration, run a model with a pause of waittime seconds.
+    
     print '\n'
     for m in range(nmodels):
         print 'Running model %d of %d.' % (m+1, nmodels)
-
-        # Make the model.c file.
-        make.makeModelFile(chemheader=chemheader, moldatfile=moldatfile, thetas=thetas, phis=phis, transitions=transitions, nchan=nchan, velres=velres,
-                           pIntensity=pIntensity, sinkPoints=sinkPoints, dust=dust, antialias=antialias, sampling=sampling, outputfile=outputfile,
-                           binoutputfile=binoutputfile, gridfile=gridfile, lte_only=lte_only, imgres=imgres, distance=distance, pxls=pxls, unit=unit,
-                           coordsys=coordsys, opratio=opratio, dtemp=dtemp, xmol=xmol, g2d=g2d, bvalue=bvalue, btype=btype,
-                           stellarmass=stellarmass, modelnumber=m)
-
-        # Run the file.
+        make.makeFile(m, model)
         os.system('nohup lime -n -f -p 20 model_%d.c >nohup_%d.out 2>&1 &' % (m, m))
         waittime = max(10., waittime)
         time.sleep(waittime)
 
-
     # Make sure all the models have run.
+    
     remaining = -1
     while len([fn for fn in os.listdir(os.curdir) if fn.endswith('.x')]) > 0:
         newremaining = len([fn for fn in os.listdir(os.curdir) if fn.endswith('.x')])
@@ -96,19 +133,14 @@ def runLime(chemheader, moldatfile, thetas, transitions, nchan, velres, fileout=
     else:
         print 'All instances complete.\n'
 
-
-    # If more than one model is run, average them.
-    # Move the resulting file to the output directory.
+    # If more than one model is run, average them and move them.
+    
     if fileout[-5:] == '.fits':
         fileout = fileout[:-5]
     if nmodels > 1:
-        import averagemodels as avg
-        avg.averageModels(nmodels, thetas, phis, transitions, fileout,
-                          returnnoise=False, directory=directory)
-
+        avg.averageModels(model)
         if outputfile is not None:
-            avg.combinePopfiles(nmodels, outputfile, directory)
-
+            avg.combinePopfiles(model)
     else:
         for t in thetas:
             for p in phis:
