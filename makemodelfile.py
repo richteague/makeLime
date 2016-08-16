@@ -1,6 +1,8 @@
 import os
 import fileinput
-
+import numpy as np
+from astropy.io import fits
+import scipy.constants as sc
 
 ''' Functions to create the model.c file. '''
 
@@ -324,4 +326,66 @@ def writeVelocityStructure(temp, model):
     temp.append('\n}\n\n\n')
 
     return
+
+
+    
+# Average over the models run.
+# model         : LIMEclass, parameters.
+ 
+def averageModels(model):
+    if model.nmodels == 1:
+        for t in model.thetas:
+            for p in model.phis:
+                for j in model.transitions:
+                    os.system('mv *.fits %s/%s_%.3f_%.3f_%d.fits' % (model.directory, model.fileout, t, p, j))
+    else:
+        for t in model.thetas:
+            for p in model.phis:
+                for j in model.transitions:
+                    toaverage = np.array([fits.getdata('%d_%.3f_%.3f_%d.fits' % (m, t, p, j), 0) 
+                                          for m in range(model.nmodels)])
+                    averaged = np.average(toaverage, axis=0)
+                    hdulist = fits.open('0_%.3f_%.3f_%d.fits' % (t, p, j))
+                    hdulist[0].data = averaged
+                    filename = fileout + '_%.3f_%.3f_%d.fits' % (t, p, j)
+                    hdulist.writeto(filename)
+                    fits.setval(filename, 'NMODELS', value='%d' % nmodels, 
+                                comment='Number of models averaged over.')
+                    os.system('mv %s %s' % (filename, model.directory))
+    return
+
+
+
+# Estimate the MCMC noise from the model ensemble.
+# model         : LIMEclass, parameters.
+
+def getNoise(model):
+    if model.returnNoise is not None:
+        for t in model.thetas:
+            for p in model.phis:
+                for j in model.transitions:
+                    toaverage = np.array([fits.getdata('%d_%.3f_%.3f_%d.fits' % (m, t, p, j), 0)
+                                          for m in range(model.nmodels)])
+                    gridnoise = np.std(toaverage, axis=0)
+                    hdulist = fits.open('0_%.3f_%.3f_%d.fits' % (t, p, j))
+                    hdulist[0].data = gridnoise
+                    hdulist.writeto(fileout+'_%.3f_%.3f_%d_noise.fits' % (t, p, j))
+                    os.system('mv %s_%.3f_%.3f_%d_noise.fits %s' % (fileout, t, p, j, model.directory))         
+    return 
+
+
+
+# Combine the population files from the model ensemble.
+# model         : LIMEclass, parameters.
+
+def combinePopfiles(model):
+    if model.outputfile is not None:
+        popfiles = np.vstack([np.loadtxt('outputfile_%d.out' % m) 
+                              for m in range(model.nmodels)]).T
+        popfiles[:3] /= sc.au
+        i = 0
+        while (i < len(fileout) and fileout[i] != '.'):
+            i += 1
+        np.save('%s%s_popfile' % (model.directory, model.fileout), popfiles)
+    return 
     

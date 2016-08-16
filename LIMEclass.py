@@ -38,6 +38,8 @@ class model:
                  coordsys='cylindrical',
                  dust='jena_thin_e6.tab',
                  directory='../',
+                 nmodels=1,
+                 returnNoise=False,
                  ):
         
         # Assign all the variables.
@@ -72,7 +74,9 @@ class model:
         self.fileout = fileout
         self.dust = dust
         self.directory = directory
-        
+        self.nmodels = nmodels
+        self.returnNoise = returnNoise
+
         return
                 
 
