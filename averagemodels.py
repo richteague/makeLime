@@ -4,58 +4,44 @@ import scipy.constants as sc
 from astropy.io import fits
 
 
-def averageModels(nmodels, thetas, phis, transitions, fileout,
-                  returnnoise=False, directory='../'):
-
-    # Average all the models.
-
-    for t in thetas:
-        for p in phis:
-            for j in transitions:
-                    
-                toaverage = np.array([fits.getdata('%d_%.3f_%.3f_%d.fits' % (m, t, p, j), 0) for m in range(nmodels)])
+def averageModels(model):
+    for t in model.thetas:
+        for p in model.phis:
+            for j in model.transitions:
+                toaverage = np.array([fits.getdata('%d_%.3f_%.3f_%d.fits' % (m, t, p, j), 0) 
+                                      for m in range(model.nmodels)])
                 averaged = np.average(toaverage, axis=0)
                 hdulist = fits.open('0_%.3f_%.3f_%d.fits' % (t, p, j))
                 hdulist[0].data = averaged
                 filename = fileout + '_%.3f_%.3f_%d.fits' % (t, p, j)
                 hdulist.writeto(filename)
                 fits.setval(filename, 'NMODELS', value='%d' % nmodels, comment='Number of models averaged over.')
-                os.system('mv %s %s' % (filename, directory))
-                
-                if returnnoise:
-                    getNoise(nmodels, thetas, phis, transitions, fileout, directory)
-
+                os.system('mv %s %s' % (filename, model.directory))
     return
 
 
-def getNoise(nmodels, thetas, phis, transitions, fileout, directory='./'):
-
-    # Calculate the dispersion of each set of models.
-
-    for t in thetas:
-        for p in phis:
-            for j in transitions:
-                toaverage = np.array([fits.getdata('%d_%.3f_%.3f_%d.fits' % (m, t, p, j), 0) for m in range(nmodels)])
+def getNoise(model):
+    for t in model.thetas:
+        for p in model.phis:
+            for j in model.transitions:
+                toaverage = np.array([fits.getdata('%d_%.3f_%.3f_%d.fits' % (m, t, p, j), 0)
+                                      for m in range(model.nmodels)])
                 gridnoise = np.std(toaverage, axis=0)
                 hdulist = fits.open('0_%.3f_%.3f_%d.fits' % (t, p, j))
                 hdulist[0].data = gridnoise
                 hdulist.writeto(fileout+'_%.3f_%.3f_%d_noise.fits' % (t, p, j))
-                os.system('mv %s_%.3f_%.3f_%d_noise.fits %s' % (fileout, t, p, j, directory))         
-    
+                os.system('mv %s_%.3f_%.3f_%d_noise.fits %s' % (fileout, t, p, j, model.directory))         
     return 
 
 
 
-def combinePopfiles(nmodels, fileout, directory='../'):
-        
-    # Combine all the popfiles from the averaged models.
-
-    popfiles = np.vstack([np.loadtxt('outputfile_%d.out' % m) for m in range(nmodels)]).T
+def combinePopfiles(model):
+    popfiles = np.vstack([np.loadtxt('outputfile_%d.out' % m) 
+                          for m in range(model.nmodels)]).T
     popfiles[:3] /= sc.au
     i = 0
     while (i < len(fileout) and fileout[i] != '.'):
         i += 1
-    np.save('%s%s' % (directory, fileout), popfiles)
-
+    np.save('%s%s' % (model.directory, model.fileout), popfiles)
     return 
 
