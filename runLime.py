@@ -29,7 +29,7 @@ def seconds2hms(seconds):
 
 
 # Run LIME models.
-def runLime(chemheader, moldatfile, thetas, transitions, nchan, velres, 
+def runLime(headerfile, moldatfile, thetas, transitions, nchan, velres, 
             fileout='temporary.fits', phis=[0], nmodels=1, pIntensity=1e4, 
             sinkPoints=1e3, dust='jena_thin_e6.tab',
             antialias=1, sampling=2, outputfile=None,
@@ -67,7 +67,7 @@ def runLime(chemheader, moldatfile, thetas, transitions, nchan, velres,
     fname = makeUniqueFolder()
     os.chdir(fname)
     path = os.path.dirname(__file__) + '/AuxFiles'
-    os.system('cp ../%s .' % chemheader)
+    os.system('cp ../%s .' % headerfile)
     os.system('cp %s/%s .' % (path, moldatfile))
     os.system('cp %s/%s .' % (path, dust))
 
@@ -95,14 +95,14 @@ def runLime(chemheader, moldatfile, thetas, transitions, nchan, velres,
                        gridfile=gridfile,
                        opratio=opratio,
                        dtemp=dtemp,
+                       phis=phis,
                        xmol=xmol,
                        g2d=g2d,
-                       bvalue=bvalue
+                       bvalue=bvalue,
                        btype=btype,
                        coordsys=coordsys,
                        dust=dust,
                        directory=directory,
-                       verbose=verbose,
                        )
                        
     print '\nAssuming input is %dD-%s coordinates.' % (model.hdr.ndim, model.coordsys)

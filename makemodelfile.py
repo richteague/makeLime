@@ -62,7 +62,7 @@ def writeImageParameters(temp, m, model):
         temp.append('\tpar->outputfile = "outputfile_%d.out";\n' % m)
     if model.binoutputfile is not None:
         temp.append('\tpar->binoutputfile = "binoutputfile_%d.out";\n' % m)
-    if gridfile is not None:
+    if model.gridfile is not None:
         temp.append('\tpar->gridfile = "gridfile_%d.out";\n' % m)
     temp.append('\n')
 
@@ -96,11 +96,11 @@ def writeImageBlock(temp, nimg, m, theta, phi, trans, model):
    
     # Use the filename convention.
    
-    filename = '%s_%.3f_%.3f_%d' % (modelnumber, theta, phi, trans)
+    filename = '%s_%.3f_%.3f_%d' % (m, theta, phi, trans)
 
     temp.append('\timg[%.0f].nchan = %.0f;\n' % (nimg, model.nchan))
     temp.append('\timg[%.0f].velres = %.0f;\n' % (nimg, model.velres))
-    temp.append('\timg[%.0f].trans = %.0f;\n' % (nimg, model.trans))
+    temp.append('\timg[%.0f].trans = %.0f;\n' % (nimg, trans))
     temp.append('\timg[%.0f].pxls = %d;\n' % (nimg, model.pxls))
     temp.append('\timg[%.0f].imgres = %.3f;\n' % (nimg, model.imgres))
     temp.append('\timg[%.0f].theta = %.3f;\n' % (nimg, theta))
@@ -121,8 +121,8 @@ def writeImageBlock(temp, nimg, m, theta, phi, trans, model):
 def writeCoords(temp, model):
     if not (model.coordsys is 'cylindrical' and model.hdr.ndim is 2):
         raise NotImplementedError
-    if coordsys is 'cylindrical':
-        if ndim is 2:
+    if model.coordsys is 'cylindrical':
+        if model.hdr.ndim is 2:
             temp.append('\tdouble c1 = sqrt(x*x + y*y) / AU;\n')
             temp.append('\tdouble c2 = fabs(z) / AU;\n')
             temp.append('\tdouble c3 = -1.;\n')
@@ -143,7 +143,7 @@ def writeFindValue(temp, model):
 
     # Find the correct path to the files.
 
-    with open(os.path.dirname(__file__)+'/InterpolationRoutines/%dD_%s.c' % (ndim, coordsys)) as f:
+    with open(os.path.dirname(__file__)+'/InterpolationRoutines/%dD_%s.c' % (model.hdr.ndim, model.coordsys)) as f:
         lines = f.readlines()
     for line in lines:
         line = line.replace('NCELLS', '%d' % model.hdr.ncells)
@@ -255,7 +255,7 @@ def writeDopplerBroadening(temp, model):
 
 def writeGastoDust(temp, model, ming2d=1.):
 
-    if g2d is None:
+    if model.g2d is None:
         return
     else: 
         temp.append('void gasIIdust(double x, double y, double z, double *gtd) {\n\n')
@@ -311,10 +311,10 @@ def writeVelocityStructure(temp, model):
 
     temp.append('void velocity(double x, double y, double z, double *velocity) {\n\n')
 
-    if stellarmass is not None:
-        temp.append('\tvelocity[0] = sqrt(6.67e-11 * %.3f * 2e30 / sqrt(x*x + y*y + z*z));\n' % stellarmass)
+    if model.stellarmass is not None:
+        temp.append('\tvelocity[0] = sqrt(6.67e-11 * %.3f * 2e30 / sqrt(x*x + y*y + z*z));\n' % model.stellarmass)
         temp.append('\tvelocity[0] *= sin(atan2(y,x));\n')
-        temp.append('\tvelocity[1] = sqrt(6.67e-11 * %.3f * 2e30 / sqrt(x*x + y*y + z*z));\n' % stellarmass)
+        temp.append('\tvelocity[1] = sqrt(6.67e-11 * %.3f * 2e30 / sqrt(x*x + y*y + z*z));\n' % model.stellarmass)
         temp.append('\tvelocity[1] *= cos(atan2(y,x));\n')
         temp.append('\tvelocity[2] = 0.0;\n')
 

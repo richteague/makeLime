@@ -25,6 +25,7 @@ class model:
                  pxls=128,
                  unit=1,
                  stellarmass=0.6,
+                 phis=None,
                  outputfile=None,
                  binoutputfile=None,
                  gridfile=None,
@@ -32,20 +33,20 @@ class model:
                  dtemp=None,
                  xmol=None,
                  g2d=None,
-                 bvalue=None,heade
+                 bvalue=None,
                  btype='absolute',
                  coordsys='cylindrical',
                  dust='jena_thin_e6.tab',
                  directory='../',
-                 verbose=True
                  ):
         
         # Assign all the variables.
         self.fileout = fileout
-        self.hdr = header.headerFile(self.headerfile, coordsys=coordsys)
+        self.hdr = header.headerFile(headerfile, coordsys=coordsys)
         self.moldatfile = moldatfile
         self.transitions = transitions
         self.thetas = thetas
+        self.phis = phis
         self.nchan = nchan
         self.velres = velres
         self.pIntensity = pIntensity
@@ -71,7 +72,6 @@ class model:
         self.fileout = fileout
         self.dust = dust
         self.directory = directory
-        self.verbose = verbose
         
         return
                 
