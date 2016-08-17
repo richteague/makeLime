@@ -360,7 +360,7 @@ def averageModels(model):
 # model         : LIMEclass, parameters.
 
 def getNoise(model):
-    if model.returnNoise:
+    if (model.returnNoise and model.nmodels > 1):
         for t in model.thetas:
             for p in model.phis:
                 for j in model.transitions:
