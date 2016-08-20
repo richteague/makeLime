@@ -1,6 +1,6 @@
 # Functions to make a header file suitable for makeLIME.py
 # Call from the command line:
-# >>> python makeHeader.py path/to/file name(optional)
+# >>> python makeheader.py path/to/file name(optional)
 
 import sys
 import numpy as np

@@ -51,8 +51,8 @@ def writeImageParameters(temp, m, model):
 
     # Include the radiative transfer parameters.
 
-    temp.append('\tpar->radius = %.1f*AU;\n' % model.hdr.rout)
-    temp.append('\tpar->minScale = %.2f*AU;\n' % model.hdr.rin)
+    temp.append('\tpar->radius = %.1f*AU;\n' % model.rout)
+    temp.append('\tpar->minScale = %.2f*AU;\n' % model.rin)
     temp.append('\tpar->pIntensity = %.0f;\n' % model.pIntensity)
     temp.append('\tpar->sinkPoints = %.0f;\n' % model.sinkPoints)
     temp.append('\tpar->dust = "%s";\n' % model.dust)
@@ -121,10 +121,10 @@ def writeImageBlock(temp, nimg, m, theta, phi, trans, model):
 # model         : LIMEclass, parameters.
 
 def writeCoords(temp, model):
-    if not (model.coordsys is 'cylindrical' and model.hdr.ndim is 2):
+    if not (model.coordsys is 'cylindrical' and model.ndim is 2):
         raise NotImplementedError
     if model.coordsys is 'cylindrical':
-        if model.hdr.ndim is 2:
+        if model.ndim is 2:
             temp.append('\tdouble c1 = sqrt(x*x + y*y) / AU;\n')
             temp.append('\tdouble c2 = fabs(z) / AU;\n')
             temp.append('\tdouble c3 = -1.;\n')
@@ -140,15 +140,15 @@ def writeFindValue(temp, model):
 
     # Include the appropriate interpolation routines. 
 
-    if not (model.coordsys is 'cylindrical' and model.hdr.ndim is 2):
+    if not (model.coordsys is 'cylindrical' and model.ndim is 2):
         raise NotImplementedError 
 
     # Find the correct path to the files.
 
-    with open(os.path.dirname(__file__)+'/InterpolationRoutines/%dD_%s.c' % (model.hdr.ndim, model.coordsys)) as f:
+    with open(os.path.dirname(__file__)+'/InterpolationRoutines/%dD_%s.c' % (model.ndim, model.coordsys)) as f:
         lines = f.readlines()
     for line in lines:
-        line = line.replace('NCELLS', '%d' % model.hdr.ncells)
+        line = line.replace('NCELLS', '%d' % model.ncells)
         temp.append(line)
     temp.append('\n\n')
     return
@@ -172,7 +172,7 @@ def writeAbundance(temp, model):
     if type(model.opratio) is int:
         model.opratio = float(model.opratio)
 
-    if type(model.opratio) is float:
+    elif type(model.opratio) is float:
         temp.append('\tabundance[0] *= (1. + opratio) / opratio;\n\n')
 
     elif type(model.opratio) is str:
@@ -200,7 +200,8 @@ def writeDensity(temp, model):
     writeCoords(temp, model)
     
     temp.append('\tdensity[0] = findvalue(c1, c2, c3, dens);\n')
-
+    
+    '''
     if type(model.opratio) is int:
         model.opratio = float(model.opratio)
 
@@ -216,6 +217,7 @@ def writeDensity(temp, model):
 
     elif model.opratio is not None:
         raise TypeError("opratio must be either None, a float or a string.")
+    '''
 
     temp.append('\tif (density[0] < 1e-30) {\n\t\tdensity[0] = 1e-30;\n\t}\n\n')
     temp.append('}\n\n\n')
@@ -337,7 +339,10 @@ def averageModels(model):
         for t in model.thetas:
             for p in model.phis:
                 for j in model.transitions:
-                    os.system('mv *.fits %s/%s_%.3f_%.3f_%d.fits' % (model.directory, model.fileout, t, p, j))
+                    filename = '%s_%.3f_%.3f_%d.fits' % (model.fileout, t, p, j)
+                    os.system('mv 0_%.3f_%.3f_%d.fits %s' % (t, p, j, filename))
+                    writeFitsHeader(filename, model, t, p) 
+                    os.system('mv %s %s' % (filename, model.directory))
     else:
         for t in model.thetas:
             for p in model.phis:
@@ -349,11 +354,31 @@ def averageModels(model):
                     hdulist[0].data = averaged
                     filename = model.fileout + '_%.3f_%.3f_%d.fits' % (t, p, j)
                     hdulist.writeto(filename)
-                    fits.setval(filename, 'NMODELS', value='%d' % model.nmodels, 
-                                comment='Number of models averaged over.')
+                    writeFitsHeader(filename, model, t, p)
                     os.system('mv %s %s' % (filename, model.directory))
     return
 
+
+
+# Include model data in the final .fits file header.
+# filename      : str, filename to edit the properties of.
+# model         : LIMEclass, parameters.
+# theta         : float, inclination angle.
+# phi           : float, position angle TODO: change to real PA.
+
+def writeFitsHeader(filename, model, theta, phi):
+    fits.setval(filename, 'DISTANCE', value=model.distance,
+                comment='Assumed distance in ray tracing (parsec).')
+    fits.setval(filename, 'CHEMMOD', value=model.hdr.fn,
+                comment='Chemical model used.')
+    fits.setval(filename, 'INC', value=theta,
+                comment='Inclination used in ray tracing (radians).')
+    fits.setval(filename, 'PA', value=phi, 
+                comment='Position angle used in ray tracing (radians).')
+    if model.nmodels > 1:
+        fits.setval(filename, 'NMODELS', value=model.nmodels,
+                    comment='Number of models averaged over.')
+    return
 
 
 # Estimate the MCMC noise from the model ensemble.

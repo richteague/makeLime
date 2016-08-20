@@ -4,7 +4,7 @@ import os
 import sys
 import time
 import makemodelfile as make
-import LIMEclass as lime
+import limeclass as lime
 
 
 # Make a unique folder.
@@ -98,7 +98,6 @@ def runLime(headerfile, moldatfile, thetas, transitions, nchan, velres,
                        outputfile=outputfile,
                        binoutputfile=binoutputfile,
                        gridfile=gridfile,
-                       opratio=opratio,
                        dtemp=dtemp,
                        phis=phis,
                        xmol=xmol,
@@ -111,9 +110,10 @@ def runLime(headerfile, moldatfile, thetas, transitions, nchan, velres,
                        nmodels=nmodels,
                        returnNoise=returnNoise,
                        )
-                       
-    print '\nAssuming input is %dD-%s coordinates.' % (model.hdr.ndim, model.coordsys)
-    print 'Found minScale = %.2f au and radius = %.2f au.\n' % (model.hdr.rin, model.hdr.rout) 
+
+    print '\n'                       
+    print 'Assuming input is %dD-%s coordinates.' % (model.ndim, model.coordsys)
+    print 'Found model bounds of  %.2f au and %.2f au.' % (model.rin, model.rout) 
 
     # For each iteration, run a model with a pause of waittime seconds.
     
@@ -128,12 +128,13 @@ def runLime(headerfile, moldatfile, thetas, transitions, nchan, velres,
     # Make sure all the models have run.
     
     remaining = -1
+    print '\n'
     while len([fn for fn in os.listdir(os.curdir) if fn.endswith('.x')]) > 0:
         newremaining = len([fn for fn in os.listdir(os.curdir) if fn.endswith('.x')])
         if newremaining != remaining:
             print 'Waiting on %d models to run.' % newremaining
             remaining = newremaining
-        time.sleep(60*remaining)
+        time.sleep(10*remaining)
     if len([fn for fn in os.listdir('./') if fn.endswith('.fits')]) < nmodels:
         print 'Not all models were successfully run. Aborting without clean-up.\n'
         return
