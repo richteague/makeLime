@@ -1,10 +1,14 @@
 # makeLime
 
-Scripts to make running LIME models more efficient. To run:
+Script to make running LIME models more efficient. Assuming the chemical models were converted with the `makeheader.py` routine then to run a simple model:
 
 ```python
-from makeLime import runLime
-runLime.runLime('chemheader.h', 'collisionalrates.dat', 'fileoutname', [0.34], [0], stellarmass=0.6)
+from makeLime import runLime as lime
+lime.run(headerfile='chemheader.h',
+         ratefile='collisionalrates.dat', 
+         fileout='fileoutname', 
+         thetas=[0.34],
+         transitions=[3,2,1])
 ```
 
 ---
@@ -13,23 +17,23 @@ runLime.runLime('chemheader.h', 'collisionalrates.dat', 'fileoutname', [0.34], [
 
 As a minimum, a pre-calculated chemical model this must be included as a C header file, `chemheader.h`. The header file must contain the coordinate positions of each point in `c1arr` and `c2arr` where the former is the radial point (in either cylindrical or polar coordinates), and the latter is either the altitude in the cylindrical case, or theta in the polar case. With each point there must be an associated H2 number density, `dens`, gas kinetic temperature `temp` and molecular relative abundance with respect to H2, `abund`. 
 
-If the header file is set up in such a format the scrips should be able to extract all the necessary information automatically.
+If the header file is set up in such a format the scrips should be able to extract all the necessary information automatically. Using the `makeheader.py` routine, this is done automatically:
+
+```
+python makeheader.py chemicalmodel.out
+```
 
 ---
 
-### Coordinate Systems
+### Additional LIME Parameters
 
-Currently this can deal with both cylindrical and polar coordinates in both 2D (assuming azimuthal symmetry) or 3D. In include an azimuthal component, this must be done with the `c3arr` array. For the interpolation to work the points must be ordered such that we cycle first through `c2`, then `c1` before finally `c3` if specified. 
+The example above is minimal. All parameters which LIME accepts are also accepted as arguments in `runLime.run`. Read the [LIME manual](https://lime.readthedocs.io/en/v1.5/) for an idea of what is possible. 
 
----
+There are different default values for the physical parameters, however most can be overridden and
 
-### Additional Parameters
-
-All inputs which LIME accepts can be included into `chemheader.h` to make a more advanced model. 
-
-__Dust Temperature__: This is controlled by the `dtemp` variable. If no dust temperature is given, equal gas and dust temperatures are assumed. If a float is specified, this is assumed to be a disk-wide rescaling of the gas temperature. Finally, if a string is given, the script assumes this is the array in `chemheader.h` which holds the dust temperatures.
-
-__Doppler Broadening__: Controlled by both `bvalue` and `btype`. By default a 50 m/s, disk-wide value is assumed. `btype` can be either `absolute`, showing `bvalue` gives the linewidth in [m/s], while `mach` means `bvalue` is describing a constant fraction of the local sound speed. For example, `bvalue = 0.3` and `bvalue = 'mach'` assumes turbulent broadening equivalent to 0.3 the local soundspeed. On the other hand, `bvalue = 50.` and `bvalue = 'absolute'` assumes a constant 50 m/s broadening everywhere.
+* __Dust Temperature__, `dtemp`: By default, if the chemical header contains an array `dtemp` this will be used, otherwise equal gas and dust temperatures are assumed. If a float is specified, this is assumed to be a disk-wide rescaling of the gas temperature and if a string is given, the script assumes this is the array in `chemheader.h` which holds the dust temperatures.
+* __Molecular Abundance__, `abund`: Assumes by default the values are stored in the `abund` array in the chemical header. If a float is provided, will assume a disk-wide value (this is used to compare a 'true' CO model and one where x(CO) = 1e-4). Finally, is a string is given
+* __Doppler Broadening__: Controlled by both `bvalue` and `btype`. By default a 50 m/s, disk-wide value is assumed. `btype` can be either `absolute`, showing `bvalue` gives the linewidth in [m/s], while `mach` means `bvalue` is describing a constant fraction of the local sound speed. For example, `bvalue = 0.3` and `bvalue = 'mach'` assumes turbulent broadening equivalent to 0.3 the local soundspeed. On the other hand, `bvalue = 50.` and `bvalue = 'absolute'` assumes a constant 50 m/s broadening everywhere.
 
 
 ---
