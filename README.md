@@ -3,11 +3,11 @@
 Script to make running LIME models more efficient. Assuming the chemical models were converted with the `makeheader.py` routine then to run a simple model:
 
 ```python
-from makeLime import runLime as lime
-lime.run(headerfile='chemheader.h',
+from makeLime import runlime as lime
+lime.run(name='modelname', 
+         headerfile='chemheader.h',
          ratefile='collisionalrates.dat', 
-         fileout='fileoutname', 
-         thetas=[0.34],
+         inclinations=[0.34],
          transitions=[3,2,1])
 ```
 
