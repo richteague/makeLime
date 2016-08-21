@@ -160,32 +160,18 @@ def writeFindValue(temp, model):
 # model         : LIMEclass, parameters.
 
 def writeAbundance(temp, model):
-
     temp.append('void abundance(double x, double y, double z, double *abundance) {\n\n')    
     writeCoords(temp, model)
-
-    if model.xmol is None:
-        temp.append('\tabundance[0] = findvalue(c1, c2, c3, abund);\n') 
+    
+    if type(model.abund) is str:
+        temp.append('\tabundance[0] = findvalue(c1, c2, c3, %s);\n' % model.abund) 
+    elif type(model.abund) is float:
+        temp.append('\tabundance[0] = %.3e;\n' % float(model.abund))
     else:
-        temp.append('\tabundance[0] = %.3e;\n' % float(model.xmol))
-
-    if type(model.opratio) is int:
-        model.opratio = float(model.opratio)
-
-    elif type(model.opratio) is float:
-        temp.append('\tabundance[0] *= (1. + opratio) / opratio;\n\n')
-
-    elif type(model.opratio) is str:
-        temp.append('\tdouble val[2];\n')
-        temp.append('\tdensity(x, y, z, &val[2]);\n')
-        temp.append('\tabundance[0] *= val[1]/val[0] + 1.;\n\n')  
-
-    elif model.opratio is not None:
-        raise TypeError("opratio must be either None, a float or a string.")
+        raise TypeError()
 
     temp.append('\tif (abundance[0] < 0.){\n\t\tabundance[0] = 0.;\n\t}\n')  
     temp.append('\n}\n\n\n')
-
     return
 
 
@@ -195,33 +181,16 @@ def writeAbundance(temp, model):
 # model         : LIMEclass, parameters.
 
 def writeDensity(temp, model): 
-
     temp.append('void density(double x, double y, double z, double *density) {\n\n')
     writeCoords(temp, model)
-    
-    temp.append('\tdensity[0] = findvalue(c1, c2, c3, dens);\n')
-    
-    '''
-    if type(model.opratio) is int:
-        model.opratio = float(model.opratio)
 
-    if type(model.opratio) is float:
-        temp.append('\tdensity[0] *= (opratio / (1. + opratio));\n') 
-        temp.append('\tdensity[1] = findvalue(c1, c2, c3, dens);\n')
-        temp.append('\tdensity[1] /= (1. + opratio);\n') 
-        temp.append('\tif (density[1] < 1e-30) {\n\tdensity[1] = 1e-30;\n\t}\n\n')
-
-    elif type(model.opratio) is str:
-        temp.append('\tdensity[1] = findvalue(c1, c2, c3, %s);\n' % model.opratio)
-        temp.append('\tif (density[1] < 1e-30) {\n\t\tdensity[1] = 1e-30;\n\t}\n\n')
-
-    elif model.opratio is not None:
-        raise TypeError("opratio must be either None, a float or a string.")
-    '''
+    if type(model.abund) is str:
+        temp.append('\tdensity[0] = findvalue(c1, c2, c3, %s);\n' % model.dens) 
+    else:
+        raise TypeError()   
 
     temp.append('\tif (density[0] < 1e-30) {\n\t\tdensity[0] = 1e-30;\n\t}\n\n')
     temp.append('}\n\n\n')
-
     return 
 
 
@@ -230,24 +199,27 @@ def writeDensity(temp, model):
 # temp          : str, lines of input file.
 # model         : LIMEclass, parameters.
 
-def writeDopplerBroadening(temp, model):
-
-    #Check that the broadening type is correct.
-    if not (model.btype is 'absolute' or model.btype is 'mach'):
-        raise ValueError("btype should be either 'absolute' or 'mach'.")
+def writeDopplerBroadening(temp, model):    
+    
+    if model.doppler is None:
+        model.doppler = 0.0
     
     temp.append('void doppler(double x, double y, double z, double *doppler) {\n\n')
     writeCoords(temp, model)
     
-    if model.btype.lower() == 'absolute':
-        temp.append('\t*doppler = %.1f;\n' % model.bvalue)
-    else:
+    if model.dopplertype == 'mach':
         temp.append('\tdouble val[2];\n')
         temp.append('\ttemperature(x, y, z, &val[2]);\n')
-        temp.append('\t*doppler = %.2f * sqrt(KBOLTZ * val[0] / 2.34 / AMU);\n' % model.bvalue)
+        
+    if type(model.doppler) is str:
+        temp.append('\t*doppler = findvalue(c1, c2, c3, %s);\n' % model.doppler) 
+    elif type(model.doppler) is float
+        temp.append('\t*doppler = %.3f;\n' % model.doppler)
+
+    if model.dopplertype == 'mach':
+        temp.append('\t*doppler *= sqrt(KBOLTZ * val[0] / 2.34 / AMU);\n')
         
     temp.append('\n}\n\n\n')
-
     return
 
 
@@ -264,16 +236,14 @@ def writeGastoDust(temp, model, ming2d=1.):
     else: 
         temp.append('void gasIIdust(double x, double y, double z, double *gtd) {\n\n')
 
-    if (type(model.g2d) is float or type(model.g2d) is int):
+    if type(model.g2d) is float:
         temp.append('\t*gtd = %.1f;\n\n' % model.g2d)
-
     elif type(model.g2d) is str:
         writeCoords(temp, model)
         temp.append('\t*gtd = findvalue(c1, c2, c3, %s);\n\n' % model.g2d)
 
     temp.append('\tif (*gtd < %.1f) {\n\t\t*gtd = %.1f;\n\t}\n' % (ming2d, ming2d))
     temp.append('}\n\n\n')
-
     return
 
 
@@ -287,22 +257,22 @@ def writeTemperatures(temp, model):
     temp.append('void temperature(double x, double y, double z, double *temperature) {\n\n')
     writeCoords(temp, model)
 
-    temp.append('\ttemperature[0] = findvalue(c1, c2, c3, temp);\n')
-    temp.append('\tif (temperature[0] < 2.73) {\n\t\ttemperature[0] = 2.73;\n\t}\n\n')
-
+    if type(model.temp) is str:
+        temp.append('\ttemperature[0] = findvalue(c1, c2, c3, %s);\n' % model.temp)
+        temp.append('\tif (temperature[0] < 2.73) {\n\t\ttemperature[0] = 2.73;\n\t}\n\n')
+    else:
+        raise TypeError()
+        
     if type(model.dtemp) is float:
         temp.append('\ttemperature[1] = %.3f * temperature[0];\n' % model.dtemp)
         temp.append('\tif (temperature[1] < 2.73){temperature[1] = 2.73;}\n')
-
     elif type(model.dtemp) is str:
         temp.append('\ttemperature[1] = findvalue(c1, c2, c3, %s);\n' % model.dtemp)
         temp.append('\tif (temperature[1] < 2.73) {\n\t\ttemperature[1] = 2.73;\n\t}\n')
-
     elif model.dtemp is not None:
-        raise TypeError("dtemp must be either None, a float or a string.")
+        raise TypeError()
 
     temp.append('}\n\n\n')
-
     return
 
 
@@ -339,9 +309,9 @@ def averageModels(model):
         for t in model.thetas:
             for p in model.phis:
                 for j in model.transitions:
-                    filename = '%s_%.3f_%.3f_%d.fits' % (model.fileout, t, p, j)
+                    filename = '%s_%.3f_%.3f_%d.fits' % (model.name, t, p, j)
                     os.system('mv 0_%.3f_%.3f_%d.fits %s' % (t, p, j, filename))
-                    writeFitsHeader(filename, model, t, p) 
+                    writeFitsHeader(name, model, t, p) 
                     os.system('mv %s %s' % (filename, model.directory))
     else:
         for t in model.thetas:
@@ -352,7 +322,7 @@ def averageModels(model):
                     averaged = np.average(toaverage, axis=0)
                     hdulist = fits.open('0_%.3f_%.3f_%d.fits' % (t, p, j))
                     hdulist[0].data = averaged
-                    filename = model.fileout + '_%.3f_%.3f_%d.fits' % (t, p, j)
+                    filename = model.name + '_%.3f_%.3f_%d.fits' % (t, p, j)
                     hdulist.writeto(filename)
                     writeFitsHeader(filename, model, t, p)
                     os.system('mv %s %s' % (filename, model.directory))
@@ -385,7 +355,7 @@ def writeFitsHeader(filename, model, theta, phi):
 # model         : LIMEclass, parameters.
 
 def getNoise(model):
-    if (model.returnNoise and model.nmodels > 1):
+    if (model.returnnoise and model.nmodels > 1):
         for t in model.thetas:
             for p in model.phis:
                 for j in model.transitions:
@@ -394,7 +364,7 @@ def getNoise(model):
                     gridnoise = np.std(toaverage, axis=0)
                     hdulist = fits.open('0_%.3f_%.3f_%d.fits' % (t, p, j))
                     hdulist[0].data = gridnoise
-                    filename = model.fileout + '_%.3f_%.3f_%d_noise.fits' % (t, p, j)
+                    filename = model.name + '_%.3f_%.3f_%d_noise.fits' % (t, p, j)
                     hdulist.writeto(filename)
                     os.system('mv %s %s' % (filename, model.directory))         
     return 
@@ -405,10 +375,19 @@ def getNoise(model):
 # model         : LIMEclass, parameters.
 
 def combinePopfiles(model):
-    if model.outputfile is not None:
+    if model.outputfile:
         popfiles = np.vstack([np.loadtxt('outputfile_%d.out' % m) 
                               for m in range(model.nmodels)]).T
         popfiles[:3] /= sc.au
-        np.save('%s%s_popfile' % (model.directory, model.fileout), popfiles)
+        np.save('%s%s_popfile' % (model.directory, model.name), popfiles)
     return 
+
+
+# Combine the binary population files from the model ensemble.
+# model         : LIMEclass, parameters.
+    
+def combineBinPopFiles(model):
+    if model.binoutputfile:
+        raise NotImplementedError()
+    return
     

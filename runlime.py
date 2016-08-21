@@ -28,43 +28,44 @@ def seconds2hms(seconds):
 
 
 # Run LIME models.
-def runLime(headerfile, moldatfile, thetas, transitions, nchan, velres, 
-            fileout='temporary.fits', phis=[0], nmodels=1, pIntensity=1e4, 
-            sinkPoints=1e3, dust='jena_thin_e6.tab',
-            antialias=1, sampling=2, outputfile=None,
-            binoutputfile=None, gridfile=None, lte_only=1, imgres=0.05, 
-            distance=54., pxls=128, returnNoise=False,
-            unit=0, coordsys='cylindrical', opratio=None, dtemp=None, 
-            xmol=None, g2d=None, bvalue=50., btype='absolute', 
-            stellarmass=0.6, cleanup=True, waittime=20, directory='../'):
+def runLime(name='tempmodelname',
+            headerfile='header.h', 
+            moldatfile='molecularrates.dat', 
+            transitions=[0],
+            inclinations=[0],
+            positionangles=[0],
+            nchan=200,
+            velres=20,
+            pIntensity=1e5,
+            sinkPoints=3e3,
+            antialias=1,
+            sampling=2,
+            lte_only=1, 
+            imgres=0.065,
+            distance=54., 
+            pxls=128, 
+            units=0, 
+            stellarmass=0.6, 
+            outputfile=False,
+            binoutputfile=False,
+            gridfile=False,
+            dens=None,
+            temp=None,
+            dtemp=None,
+            abund=None,
+            g2d=None,
+            doppler=None,
+            dopplertype='absolute',
+            coordsys='cylindrical',
+            dust='jena_thin_e6.tab',
+            directory='../',
+            nmodels=1,
+            returnnoise=False,
+            cleanup=True, 
+            waittime=20):
 
-
-    if opratio is not None:
-        raise NotImplementedError('Still need work on this.')
-
-    # Make sure the lists of imaging parameters are lists.
-
-    if type(thetas) is not list:
-        thetas = [thetas]
-    if type(transitions) is not list:
-        transitions = [transitions]
-    if type(phis) is not list:
-        phis = [phis]
-    if coordsys not in ['cylindrical', 'polar']:
-        raise ValueError("""Wrong coordsys value.
-                            Must be either 'cylindrical' or 'polar'.""")
-    if btype not in ['absolute', 'mach']:
-        raise ValueError("""Wrong btype value.
-                            Must be either 'absolute' or 'mach'.""")
-    if opratio is not None:
-        raise NotImplementedError
-
-    if binoutputfile is not None:
-        raise NotImplementedError
-
-    if fileout[-5:] == '.fits':
-        fileout = fileout[:-5]
-
+    # Start the clock to time the running of models.
+    
     t0 = time.time()
 
     # Create the temporary folder to work in and move there.
@@ -78,11 +79,12 @@ def runLime(headerfile, moldatfile, thetas, transitions, nchan, velres,
 
     # Generate a LIME model class instance.
     
-    model = lime.model(fileout=fileout,
+    model = lime.model(name=name,
                        headerfile=headerfile,
                        moldatfile=moldatfile,
                        transitions=transitions, 
-                       thetas=thetas,
+                       inclinations=inclinations,
+                       positionangles=positionangles,
                        nchan=nchan,
                        velres=velres,
                        pIntensity=pIntensity,
@@ -98,17 +100,18 @@ def runLime(headerfile, moldatfile, thetas, transitions, nchan, velres,
                        outputfile=outputfile,
                        binoutputfile=binoutputfile,
                        gridfile=gridfile,
+                       dens=dens,
+                       temp=temp,
                        dtemp=dtemp,
-                       phis=phis,
-                       xmol=xmol,
+                       abund=abund,
                        g2d=g2d,
-                       bvalue=bvalue,
-                       btype=btype,
+                       doppler=doppler, 
+                       dopplertype=dopplertype,
                        coordsys=coordsys,
                        dust=dust,
                        directory=directory,
                        nmodels=nmodels,
-                       returnNoise=returnNoise,
+                       returnnoise=returnnoise,
                        )
 
     print '\n'                       
@@ -145,6 +148,7 @@ def runLime(headerfile, moldatfile, thetas, transitions, nchan, velres,
     
     make.averageModels(model)
     make.combinePopfiles(model)
+    make.combineBinPopFiles(model)
     make.getNoise(model)
 
     # Clean up.
