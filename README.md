@@ -11,6 +11,8 @@ lime.run(name='modelname',
          transitions=[3,2,1])
 ```
 
+This will run a model based on the physical structure stored in `chemheader.h`, assuming the collisional rates `collisionalrates.dat` (which are stored in the `AuxFiles` folder), at an inclination of 0.34 radians, and for the transitions 3, 2 and 1 as listed in the `collisionalrates.dat` file. 
+
 ---
 
 ### Chemical Model
@@ -20,7 +22,7 @@ As a minimum, a pre-calculated chemical model this must be included as a C heade
 If the header file is set up in such a format the scrips should be able to extract all the necessary information automatically. Using the `makeheader.py` routine, this is done automatically:
 
 ```
-python makeheader.py chemicalmodel.out
+>>> python makeheader.py chemicalmodel.out
 ```
 
 ---
@@ -31,37 +33,15 @@ The example above is minimal. All parameters which LIME accepts are also accepte
 
 When called, `runLIME` will search the chemical header file for arrays containing the density, gas temperature, dust temperature, molecular relative abundance, gas-to-dust ratio and turbulent velocity structures. Unless directed, it will assume the default names: `dens`, `temp`, `dtemp`, `abund`, `gastodust` and `doppler` respectively. 
 
-If the specified array name cannot be found for `dtemp`, `gastodust` or `doppler`, the value will revert to `None`, which returns to the default values. These are equal gas and dust temperatures, a model wide gas-to-dust of 100 and no Doppler broadening respectively.
+If the specified array name cannot be found for `dtemp`, `gastodust` or `doppler`, the value will revert to their default values. These are equal gas and dust temperatures, a model wide gas-to-dust of 100 and Doppler broadening of 40 m/s respectively.
 
-In addition to array names (or `None` for all but `abund`), `dtemp`, `abund`, `gastodust` and `doppler` can also be a float. This specifies a disk-wide value for that property. For example this can be used to compare a CO structure from a chemical model and one where x(CO) = 1e-4 throughout the disk. By default, `dopplertype` is assumed to be `absolute`, meaning the Doppler broadening is given in meters per second. Alternatively this can be `mach`, where it is a fraction of the local soundspeed.
+In addition to array names and default settings, `dtemp`, `abund`, `gastodust` and `doppler` can also be a float. This specifies a disk-wide value for that property. For example, this can be used to compare a CO structure from a chemical model and one where x(CO) = 1e-4 throughout the disk by setting `abund=1e-4`.
+
+For the turbulent motions set by `doppler`, the default `dopplertype` is assumed to be `absolute`, meaning the Doppler broadening is given in meters per second. Alternatively this can be `mach`, where it is a fraction of the local soundspeed. The bulk motion of the gas is assumed to be Keplerian rotation around a central star of mass specified with `stellarmass` in solar masses.
 
 ### Averaging Models
 
-Averages the ensemble of models run if `nmodels > 1`. Has basic options to return noise maps to understand the MC noise.
+If `nmodels > 1`, then several models are averaged together. This creates a smoother outer disk which usually suffers from gridding noise. If `returnnoise` is set, the standard devation of each voxel through the ensemble of models is returned as an additional file. If `outputfile` or `binoutputfil` are selected, these will be combined if more than one model is run.
 
----
 
-```python
-averageModels(nmodels, thetas, phis, transitions, fileout, returnnoise=False, directory='../')
-```
-
-All parameters as described in `makemodel.py`.
-
----
-
-```python
-combinePopfiles(nmodels, fileout, directory='../')
-```
-
-If multiple models are run, all producing outputfiles, this combines them into a single file.
-
----
-
-```python
-getNoise(nmodels, thetas, phis, transitions, fileout, directory='./')
-```
-
-Returns the standard deviation map for the ensemble of models. This is useful to understand how the MC noise affects the data.
-
----
 
