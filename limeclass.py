@@ -53,9 +53,9 @@ class model:
         
         if name[-5:] == '.fits':
             warnings.warn("Removing '.fits' from model name.")
-            self.fileout = name[:-5]
+            self.name = name[:-5]
         else:
-            self.fileout = name
+            self.name = name
         
         if type(outputfile) is bool: 
             self.outputfile = outputfile

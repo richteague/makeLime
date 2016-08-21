@@ -213,7 +213,7 @@ def writeDopplerBroadening(temp, model):
         
     if type(model.doppler) is str:
         temp.append('\t*doppler = findvalue(c1, c2, c3, %s);\n' % model.doppler) 
-    elif type(model.doppler) is float
+    elif type(model.doppler) is float:
         temp.append('\t*doppler = %.3f;\n' % model.doppler)
 
     if model.dopplertype == 'mach':
@@ -311,7 +311,7 @@ def averageModels(model):
                 for j in model.transitions:
                     filename = '%s_%.3f_%.3f_%d.fits' % (model.name, t, p, j)
                     os.system('mv 0_%.3f_%.3f_%d.fits %s' % (t, p, j, filename))
-                    writeFitsHeader(name, model, t, p) 
+                    writeFitsHeader(filename, model, t, p) 
                     os.system('mv %s %s' % (filename, model.directory))
     else:
         for t in model.thetas:
