@@ -216,9 +216,9 @@ class model:
         else:
             raise TypeError('pxls must be a number.')
 
-        if (self.distance * self.pxls * 0.5 < self.rout):
+        if (self.distance * self.imgres * self.pxls * 0.5 < self.rout):
             warnings.warn("Check distance and pixel scaling.")
-            warnings.warn("Image has projected distance of %.2f au." % (self.distance * self.pxls))
+            warnings.warn("Image has projected distance of %.2f au." % (self.imgres * self.distance * self.pxls))
             warnings.warn("Model has a size of %.2f au." % (2. * self.rout))
         
         if (type(unit) is int and unit in [0, 1, 2, 3]):

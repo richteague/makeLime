@@ -1,3 +1,4 @@
+import time
 import os
 import fileinput
 import numpy as np
@@ -337,17 +338,16 @@ def averageModels(model):
 # phi           : float, position angle TODO: change to real PA.
 
 def writeFitsHeader(filename, model, theta, phi):
-    fits.setval(filename, 'DISTANCE', value=model.distance,
-                comment='Assumed distance in ray tracing (parsec).')
-    fits.setval(filename, 'CHEMMOD', value=model.hdr.fn,
-                comment='Chemical model used.')
-    fits.setval(filename, 'INC', value=theta,
-                comment='Inclination used in ray tracing (radians).')
-    fits.setval(filename, 'PA', value=phi, 
-                comment='Position angle used in ray tracing (radians).')
-    if model.nmodels > 1:
-        fits.setval(filename, 'NMODELS', value=model.nmodels,
-                    comment='Number of models averaged over.')
+       
+    data, header = fits.getdata(filename, header=True)
+    header['DISTANCE'] = model.distance, 'Distance in parsec.'
+    header['CHEMMOD'] = model.hdr.fn, 'Chemical model used.'
+    header['INC'] = theta, 'Inclianation in radians.'
+    header['PA'] = phi, 'Position angle in radians.'
+    header['NMODELS'] = model.nmodels, 'Number of models averaged.' 
+    fits.writeto(filename, data, header, clobber=True)    
+
+    print 'Appended header with model properties.'
     return
 
 
