@@ -6,6 +6,7 @@ import sys
 import numpy as np
 import scipy.constants as sc
 
+
 def writeHeaderString(array, name):
 
     # Write the array strings.
@@ -16,12 +17,13 @@ def writeHeaderString(array, name):
     tosave = tosave[:-2] + '};\n'
     return tosave
 
+
 def makeHeader(path, name=None):
 
     # Write the header.
     # Make sure the orientation is correct.
     # Remove values with a zero density.
-        
+
     if not type(path) is str:
         raise TypeError("Must be path to chemical model.")
     if path.endswith('.out'):
@@ -34,7 +36,7 @@ def makeHeader(path, name=None):
 
     # Check that the arrays are correctly sized.
     # If it is the 8 parameter value, remove the average grainsize.
-    
+
     if data.shape[0] == 8:
         data = np.vstack([data[:5], data[6:]])
         datalong = True
@@ -44,11 +46,11 @@ def makeHeader(path, name=None):
         raise ValueError("Must be either a 5 or 8 column file.")
 
     # Make the conversions to LIME appropriate units:
-    # Main collider density (H2) is in [m^-3]. 
+    # Main collider density (H2) is in [m^-3].
     # Relative abundance is with respect to the main collider density.
     # Temperatures are all in [K].
 
-    with np.errstate(divide='ignore'):       
+    with np.errstate(divide='ignore'):
         data[2] /= 2.37 * sc.m_p * 1e3
         data[-1] = data[-1]/data[2]
         data[2] *= 1e6
@@ -58,19 +60,19 @@ def makeHeader(path, name=None):
 
     # Make sure these are the same as in the template file.
     # Note that we skip the average grainsize array.
-    
+
     if datalong:
-        arrnames = ['c1arr', 'c2arr', 'dens', 'temp', 'dtemp', 
-                    'size', 'gastodust', 'abund']
+        arrnames = ['c1arr', 'c2arr', 'dens', 'temp', 'dtemp',
+                    'gastodust', 'abund']
     else:
         arrnames = ['c1arr', 'c2arr', 'dens', 'temp', 'abund']
-        
+
     # Write the arrays and output to file.
-        
+
     hstring = ''
     for i, array in enumerate(data):
             hstring += writeHeaderString(array, arrnames[i])
-    
+
     if name is None:
         name = path.split('/')[-1]
         i = -1
@@ -82,7 +84,7 @@ def makeHeader(path, name=None):
         name = name[:i]
     elif name[-2:] == '.h':
         name = name[:-2]
-        
+
     with open('%s.h' % name, 'w') as hfile:
         hfile.write('%s' % hstring)
     print "Written to '%s.h'." % name
@@ -93,4 +95,3 @@ if len(sys.argv) == 2:
     makeHeader(sys.argv[1])
 else:
     makeHeader(sys.argv[1], sys.argv[2])
-

@@ -27,6 +27,7 @@ def seconds2hms(seconds):
 
 
 # Run LIME models.
+<<<<<<< HEAD
 def runLime(name='tempmodelname',
             headerfile='header.h',
             moldatfile='molecularrates.dat',
@@ -62,6 +63,43 @@ def runLime(name='tempmodelname',
             returnnoise=False,
             cleanup=True,
             waittime=20):
+=======
+def run(name='tempmodelname',
+        headerfile='header.h', 
+        moldatfile='molecularrates.dat', 
+        transitions=[0],
+        inclinations=[0],
+        positionangles=[0],
+        nchan=200,
+        velres=20,
+        pIntensity=1e4,
+        sinkPoints=3e3,
+        antialias=1,
+        sampling=2,
+        lte_only=1, 
+        imgres=0.07,
+        distance=54., 
+        pxls=128, 
+        unit=0, 
+        stellarmass=0.6, 
+        outputfile=False,
+        binoutputfile=False,
+        gridfile=False,
+        dens=None,
+        temp=None,
+        dtemp=None,
+        abund=None,
+        g2d=None,
+        doppler=40.,
+        dopplertype='absolute',
+        coordsys='cylindrical',
+        dust='jena_thin_e6.tab',
+        directory='../',
+        nmodels=1,
+        returnnoise=False,
+        cleanup=True, 
+        waittime=20):
+>>>>>>> 6f0ebeebd46a37250dc31661b15879e57f1e7045
 
     # Start the clock to time the running of models.
     t0 = time.time()

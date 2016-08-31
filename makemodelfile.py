@@ -1,5 +1,4 @@
 import os
-import fileinput
 import numpy as np
 from astropy.io import fits
 import scipy.constants as sc
@@ -10,13 +9,14 @@ import scipy.constants as sc
 # m             : int, model number.
 # model         : LIMEclass, parameters.
 
+
 def makeFile(m, model):
 
     # Include the headers.
-    tempfile = ['#include "lime.h"\n', '#include "math.h"\n', 
+    tempfile = ['#include "lime.h"\n', '#include "math.h"\n',
                 '#include "stdio.h"\n', '#include "stdlib.h"\n']
     tempfile.append('#include "%s"\n\n' % model.hdr.fn.split('/')[-1])
-    
+
     # Include the imaging parameters.
     writeImageParameters(tempfile, m, model)
 
@@ -30,7 +30,7 @@ def makeFile(m, model):
     writeGastoDust(tempfile, model)
     writeDopplerBroadening(tempfile, model)
     writeVelocityStructure(tempfile, model)
-    
+
     # Save the output.
     with open('model_%d.c' % m, 'w') as tosave:
         for line in tempfile:
@@ -38,12 +38,11 @@ def makeFile(m, model):
 
     return
 
-
-
 # Write an parameter block with the given parameters.
 # temp          : str, lines of input file.
 # m             : int, model number.
 # model         : LIMEclass, parameters.
+
 
 def writeImageParameters(temp, m, model):
 
@@ -73,17 +72,13 @@ def writeImageParameters(temp, m, model):
     for i, theta in enumerate(model.thetas):
         for p, phi in enumerate(model.phis):
             for t, trans in enumerate(model.transitions):
-                nimg = i * len(model.transitions) * len(model.phis) 
+                nimg = i * len(model.transitions) * len(model.phis)
                 nimg += p * len(model.transitions) + t
                 nimg = int(nimg)
                 writeImageBlock(temp, nimg, m, theta, phi, trans, model)
-
-
     temp.append('}\n\n\n')
 
     return
-
-
 
 # Write an image block with the given parameters.
 # temp          : str, lines of input file.
@@ -94,10 +89,11 @@ def writeImageParameters(temp, m, model):
 # transition    : int, transition number.
 # model         : LIMEclass, parameters.
 
+
 def writeImageBlock(temp, nimg, m, theta, phi, trans, model):
-   
+
     # Use the filename convention.
-   
+
     filename = '%s_%.3f_%.3f_%d' % (m, theta, phi, trans)
 
     temp.append('\timg[%.0f].nchan = %.0f;\n' % (nimg, model.nchan))
@@ -106,19 +102,17 @@ def writeImageBlock(temp, nimg, m, theta, phi, trans, model):
     temp.append('\timg[%.0f].pxls = %d;\n' % (nimg, model.pxls))
     temp.append('\timg[%.0f].imgres = %.3f;\n' % (nimg, model.imgres))
     temp.append('\timg[%.0f].theta = %.3f;\n' % (nimg, theta))
-    temp.append('\timg[%.0f].phi = %.3f;\n' %  (nimg, phi))
+    temp.append('\timg[%.0f].phi = %.3f;\n' % (nimg, phi))
     temp.append('\timg[%.0f].distance = %.1f*PC;\n' % (nimg, model.distance))
     temp.append('\timg[%.0f].unit = %d;\n' % (nimg, model.unit))
     temp.append('\timg[%.0f].filename = "%s.fits";\n' % (nimg, filename))
-    temp.append('\n') 
-    
-    return 
-   
-   
-    
+    temp.append('\n')
+    return
+
 # Write the coordinates for the start of each function.
 # temp          : str, lines of input file.
 # model         : LIMEclass, parameters.
+
 
 def writeCoords(temp, model):
     if not (model.coordsys is 'cylindrical' and model.ndim is 2):
@@ -130,22 +124,22 @@ def writeCoords(temp, model):
             temp.append('\tdouble c3 = -1.;\n')
     return
 
-
-
 # Write the interpolation routine.
 # temp          : str, lines of input file.
 # model         : LIMEclass, parameters.
 
+
 def writeFindValue(temp, model):
 
-    # Include the appropriate interpolation routines. 
+    # Include the appropriate interpolation routines.
 
     if not (model.coordsys is 'cylindrical' and model.ndim is 2):
-        raise NotImplementedError 
+        raise NotImplementedError
 
     # Find the correct path to the files.
-
-    with open(os.path.dirname(__file__)+'/InterpolationRoutines/%dD_%s.c' % (model.ndim, model.coordsys)) as f:
+    path = os.path.dirname(__file__)
+    path += '/InterpolationRouttines/'
+    with open(path+'%dD_%s.c' % (model.ndim, model.coordsys)) as f:
         lines = f.readlines()
     for line in lines:
         line = line.replace('NCELLS', '%d' % model.ncells)
@@ -153,34 +147,34 @@ def writeFindValue(temp, model):
     temp.append('\n\n')
     return
 
-
-
 # Write the molecular abundance section.
 # temp          : str, lines of input file.
 # model         : LIMEclass, parameters.
 
+
 def writeAbundance(temp, model):
-    temp.append('void abundance(double x, double y, double z, double *abundance) {\n\n')    
+    temp.append('''void abundance(double x, double y, double z, double\
+                   *abundance) {\n\n''')
     writeCoords(temp, model)
-    
+
     if type(model.abund) is str:
-        temp.append('\tabundance[0] = findvalue(c1, c2, c3, %s);\n' % model.abund) 
+        temp.append('\tabundance[0] = findvalue(c1, c2, c3, %s);\n' %
+                    model.abund)
     elif type(model.abund) is float:
         temp.append('\tabundance[0] = %.3e;\n' % float(model.abund))
     else:
         raise TypeError()
 
-    temp.append('\tif (abundance[0] < 0.){\n\t\tabundance[0] = 0.;\n\t}\n')  
+    temp.append('\tif (abundance[0] < 0.){\n\t\tabundance[0] = 0.;\n\t}\n')
     temp.append('\n}\n\n\n')
     return
-
-
 
 # Write the molecular abundance section.
 # temp          : str, lines of input file.
 # model         : LIMEclass, parameters.
 
-def writeDensity(temp, model): 
+
+def writeDensity(temp, model):
     temp.append('void density(double x, double y, double z, double *density) {\n\n')
     writeCoords(temp, model)
 
@@ -213,7 +207,7 @@ def writeDopplerBroadening(temp, model):
         
     if type(model.doppler) is str:
         temp.append('\t*doppler = findvalue(c1, c2, c3, %s);\n' % model.doppler) 
-    elif type(model.doppler) is float
+    elif type(model.doppler) is float:
         temp.append('\t*doppler = %.3f;\n' % model.doppler)
 
     if model.dopplertype == 'mach':
@@ -311,7 +305,7 @@ def averageModels(model):
                 for j in model.transitions:
                     filename = '%s_%.3f_%.3f_%d.fits' % (model.name, t, p, j)
                     os.system('mv 0_%.3f_%.3f_%d.fits %s' % (t, p, j, filename))
-                    writeFitsHeader(name, model, t, p) 
+                    writeFitsHeader(filename, model, t, p) 
                     os.system('mv %s %s' % (filename, model.directory))
     else:
         for t in model.thetas:
@@ -337,17 +331,16 @@ def averageModels(model):
 # phi           : float, position angle TODO: change to real PA.
 
 def writeFitsHeader(filename, model, theta, phi):
-    fits.setval(filename, 'DISTANCE', value=model.distance,
-                comment='Assumed distance in ray tracing (parsec).')
-    fits.setval(filename, 'CHEMMOD', value=model.hdr.fn,
-                comment='Chemical model used.')
-    fits.setval(filename, 'INC', value=theta,
-                comment='Inclination used in ray tracing (radians).')
-    fits.setval(filename, 'PA', value=phi, 
-                comment='Position angle used in ray tracing (radians).')
-    if model.nmodels > 1:
-        fits.setval(filename, 'NMODELS', value=model.nmodels,
-                    comment='Number of models averaged over.')
+       
+    data, header = fits.getdata(filename, header=True)
+    header['DISTANCE'] = model.distance, 'Distance in parsec.'
+    header['CHEMMOD'] = model.hdr.fn, 'Chemical model used.'
+    header['INC'] = theta, 'Inclianation in radians.'
+    header['PA'] = phi, 'Position angle in radians.'
+    header['NMODELS'] = model.nmodels, 'Number of models averaged.' 
+    fits.writeto(filename, data, header, clobber=True)    
+
+    print 'Appended header with model properties.'
     return
 
 
