@@ -138,7 +138,7 @@ def writeFindValue(temp, model):
 
     # Find the correct path to the files.
     path = os.path.dirname(__file__)
-    path += '/InterpolationRouttines/'
+    path += '/InterpolationRoutines/'
     with open(path+'%dD_%s.c' % (model.ndim, model.coordsys)) as f:
         lines = f.readlines()
     for line in lines:
