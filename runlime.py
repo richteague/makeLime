@@ -61,6 +61,7 @@ def run(name='tempmodelname',
         nmodels=1,
         returnnoise=False,
         cleanup=True,
+        blend=1,
         waittime=20):
 
     # Start the clock to time the running of models.
@@ -108,8 +109,10 @@ def run(name='tempmodelname',
                        directory=directory,
                        nmodels=nmodels,
                        returnnoise=returnnoise,
+                       blend=blend,
                        )
 
+    print '\n'
     print 'Input is %dD-%s coordinates.' % (model.ndim, model.coordsys)
     print 'Model bounds are %.2f and %.2f au' % (model.rin, model.rout)
 

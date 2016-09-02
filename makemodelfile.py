@@ -59,6 +59,10 @@ def writeImageParameters(temp, m, model):
     temp.append('\tpar->antialias = %d;\n' % model.antialias)
     temp.append('\tpar->sampling = %d;\n' % model.sampling)
     temp.append('\tpar->lte_only = %d;\n' % model.lte_only)
+    temp.append('\tpar->blend = %d;\n' % model.blend)
+
+    # Include optional output files.
+
     if model.outputfile is not None:
         temp.append('\tpar->outputfile = "outputfile_%d.out";\n' % m)
     if model.binoutputfile is not None:

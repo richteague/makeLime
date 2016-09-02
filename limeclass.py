@@ -42,15 +42,17 @@ class model:
                  directory='../',
                  nmodels=1,
                  returnnoise=False,
+                 blend=0,
                  ):
 
+        print '\n'
         self.path = os.path.dirname(__file__)
         self.auxfiles = self.path + '/AuxFiles'
 
         # Output configurations.
 
         if name[-5:] == '.fits':
-            warnings.warn("Removing '.fits' from model name.")
+            print "Removing '.fits' from model name."
             self.name = name[:-5]
         else:
             self.name = name
@@ -196,7 +198,8 @@ class model:
         else:
             raise TypeError("antialias must be a number")
         if self.antialias > 4:
-            warnings.warn("High antialias value of %d, might be slow." % self.antialias)
+            print "Warning: High antialias value of %d." % self.antialias
+            print "\t Ray tracing may be slow..."
 
         if type(imgres) is float:
             self.imgres = imgres
@@ -214,14 +217,20 @@ class model:
             raise TypeError('pxls must be a number.')
 
         if (self.distance * self.imgres * self.pxls * 0.5 < self.rout):
-            warnings.warn("Check distance and pixel scaling.")
-            warnings.warn("Image has projected distance of %.2f au." % (self.imgres * self.distance * self.pxls))
-            warnings.warn("Model has a size of %.2f au." % (2. * self.rout))
+            print "Warning: Check distance and pixel scaling."
+            print "\t Image has projected distance of %.2f au." % (self.imgres * self.distance * self.pxls)
+            print "\t Model has a size of %.2f au." % (2. * self.rout)
 
         if (type(unit) is int and unit in [0, 1, 2, 3]):
             self.unit = unit
         else:
             raise ValueError("unit must be 0, 1, 2 or 3.")
+
+        if not (blend == 0 or blend == 1):
+            self.blend = 0
+            print 'Warning: Unknown blend value. Set to 0.'
+        else:
+            self.blend = blend
 
         return
 
