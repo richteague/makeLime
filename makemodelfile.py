@@ -61,6 +61,27 @@ def writeImageParameters(temp, m, model):
     temp.append('\tpar->lte_only = %d;\n' % model.lte_only)
     temp.append('\tpar->blend = %d;\n' % model.blend)
 
+    # Ortho / para ratio of the H2.
+    # Takes density[0] to be oH2, density[1] to be pH2.
+    # Must rescale the dust and relative abudnances to new densities.
+    # TODO: What happens if .dat file doesn't have H2?
+    # TODO: Include other collision partners.
+
+    if model.opr_cp is None:
+        temp.append('\tpar->collPartIds[0] = CP_H2;\n')
+        temp.append('\tpar->dustWeights[0] = 1.0;\n')
+        temp.append('\tpar->nMolWeights[0] = 1.0;\n')
+    else:
+        x = np.ones(2)
+        x[0] = 1. + (1. / model.opr_cp)
+        x[1] = 1. + model.opr_cp
+        x /= np.sum(x)
+        temp.append('\tpar->collPartIds[0] = CP_o_H2;\n')
+        temp.append('\tpar->collPartIds[1] = CP_p_H2;\n')
+        for i in range(2):
+            temp.append('\tpar->dustWeights[%d] = %.2f;\n' % (i, x[i]))
+            temp.append('\tpar->dustWeights[%d] = %.2f;\n' % (i, x[i]))
+
     # Include optional output files.
 
     if model.outputfile is not None:
@@ -168,6 +189,12 @@ def writeAbundance(temp, model):
     else:
         raise TypeError()
 
+    # Include a rescaling factor for, e.g., ortho / para considerations
+    # or rescaling to an isotopologue.
+
+    if model.rescale_abund != 1.0:
+        temp.append('\tabundance[0] *= %.3e;\n' % model.rescale_abund)
+
     temp.append('\tif (abundance[0] < 0.){\n\t\tabundance[0] = 0.;\n\t}\n')
     temp.append('\n}\n\n\n')
     return
@@ -181,12 +208,20 @@ def writeDensity(temp, model):
     temp.append('void density(double x, double y, double z, double *density) {\n\n')
     writeCoords(temp, model)
 
-    if type(model.abund) is str:
-        temp.append('\tdensity[0] = findvalue(c1, c2, c3, %s);\n' % model.dens)
-    else:
-        raise TypeError()
+    # If there are ortho-para colliders, include two densities for H2. 
+    # Rescale the densities as appropriate: x[0] = x(oH2), x[1] = x(nH2).
+    
+    x = np.ones(2)
+    if model.opr_cp is not None:
+        x[0] = model.opr_cp / (1. + model.opr_cp)
+        x[1] = 1. / (1. + model.opr_cp)
+    
+    for i in range(2):
+        temp.append('\tdensity[%d] = %.2f * findvalue(c1, c2, c3, %s);\n' % (i, x[i], model.dens))
+        temp.append('\tif (density[%d] < 1e-30) {\n\t\tdensity[%d] = 1e-30;\n\t}\n\n' % (i, i))
+        if model.opr_cp is None:
+            break
 
-    temp.append('\tif (density[0] < 1e-30) {\n\t\tdensity[0] = 1e-30;\n\t}\n\n')
     temp.append('}\n\n\n')
     return
 
@@ -335,6 +370,8 @@ def writeFitsHeader(filename, model, theta, phi):
     header['INC'] = theta, 'Inclianation in radians.'
     header['PA'] = phi, 'Position angle in radians.'
     header['NMODELS'] = model.nmodels, 'Number of models averaged.'
+    if model.opr_cp is not None:
+        header['H2_OPR'] = model.opr_cp, 'H2 ortho to para ratio.'
     fits.writeto(filename, data, header, clobber=True)
 
     print 'Appended header with model properties.'

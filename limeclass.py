@@ -43,6 +43,8 @@ class model:
                  nmodels=1,
                  returnnoise=False,
                  blend=0,
+                 opr_cp=3.,
+                 rescale_abund=1.0,
                  ):
 
         print '\n'
@@ -139,7 +141,7 @@ class model:
             raise TypeError("sinkPoints must be a float.")
 
         if self.sinkPoints > self.pIntensity:
-            warnings.warn("sinkPoints > pIntensity.")
+            print "Warning: sinkPoints > pIntensity."
 
         if (type(sampling) is int and sampling < 3):
             self.sampling = sampling
@@ -180,8 +182,6 @@ class model:
             self.phis = [positionangles]
         else:
             self.phis = positionangles
-        if self.phis != [0]:
-            raise NotImplementedError("No non-zero PAs.")
 
         if (type(nchan) is float or type(nchan) is int):
             self.nchan = float(nchan)
@@ -218,8 +218,8 @@ class model:
 
         if (self.distance * self.imgres * self.pxls * 0.5 < self.rout):
             print "Warning: Check distance and pixel scaling."
-            print "\t Image has projected distance of %.2f au." % (self.imgres * self.distance * self.pxls)
-            print "\t Model has a size of %.2f au." % (2. * self.rout)
+            print "\t Image has projected distance of %.2f au," % (self.imgres * self.distance * self.pxls)
+            print "\t but the model has a size of %.2f au." % (2. * self.rout)
 
         if (type(unit) is int and unit in [0, 1, 2, 3]):
             self.unit = unit
@@ -231,6 +231,18 @@ class model:
             print 'Warning: Unknown blend value. Set to 0.'
         else:
             self.blend = blend
+
+        cps = ['H2', 'pH2', 'oH2', 'e', 'H', 'He', 'H+']
+        
+        if (opr_cp > 0. or opr_cp is None):
+            self.opr_cp = opr_cp
+        else:
+            raise ValueError("opr_cp must be positive.")
+
+        if type(rescale_abund) is float:
+            self.rescale_abund = rescale_abund
+        else:
+            raise TypeError("rescale_abund must be a float.")
 
         return
 

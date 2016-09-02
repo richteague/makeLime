@@ -62,6 +62,8 @@ def run(name='tempmodelname',
         returnnoise=False,
         cleanup=True,
         blend=1,
+        opr_cp=None,
+        rescale_abund=1.0,
         waittime=20):
 
     # Start the clock to time the running of models.
@@ -110,6 +112,8 @@ def run(name='tempmodelname',
                        nmodels=nmodels,
                        returnnoise=returnnoise,
                        blend=blend,
+                       opr_cp=opr_cp,
+                       rescale_abund=rescale_abund
                        )
 
     print '\n'
@@ -127,17 +131,35 @@ def run(name='tempmodelname',
         time.sleep(waittime)
 
     # Make sure all the models have run.
+    # Check the number of *.x files to guess how many are running.
+    # If nohup_X.out contains segmentation fault, then quit.
+
+    check_segfault_time = time.time()
     remaining = -1
     print '\n'
     while len([fn for fn in os.listdir('./') if fn.endswith('.x')]) > 0:
         nremaining = len([fn for fn in os.listdir('./') if fn.endswith('.x')])
         if nremaining != remaining:
-            print 'Waiting on %d models to run.' % nremaining
+            print 'Waiting on %d model(s) to run.' % nremaining
             remaining = nremaining
         time.sleep(10*remaining)
+
+        # Check for segmentation faults.
+        # If the number of nohup_X.out files with 'core dumped' in them
+        # equals the number of lime_$$.x files left, assumped all have quit.
+
+        nohups = [fn for fn in os.listdir('./') if fn.startswith('nohup')]
+        coresdumped = 0
+        for nh in nohups:
+            if 'core dumped' in open(nh).read():
+                coresdumped += 1
+        if coresdumped == nremaining:
+            print 'Found %d segmentation faults.' % coresdumped
+            break
+
     if len([fn for fn in os.listdir('./') if fn.endswith('.fits')]) < nmodels:
         print 'Not all models were successfully run.'
-        print 'Aborting without clean-up.'
+        print 'Aborting without clean-up.\n'
         return
     else:
         print 'All instances complete.\n'
