@@ -261,12 +261,14 @@ class model:
             raise ValueError("No appropriate collisonal rates found.")
 
         if (opr_cp is None and not H2_rates):
-            print 'Warning: No H2 collider density rates found.'
-            print '\t Assuming oH2 / pH2 ratio of 3.'
+            if not self.lte_only:
+                print 'Warning: No H2 collider density rates found.'
+                print '\t Assuming oH2 / pH2 ratio of 3.'
             self.opr_cp = 3.
         elif (type(opr_cp) is float and not oH2_rates and not pH2_rates):
-            print 'Warning: No ortho-H2 or para-H2 rates found.'
-            print '\t Assuming total H2 rates.'
+            if not self.lte_only:
+                print 'Warning: No ortho-H2 or para-H2 rates found.'
+                print '\t Assuming total H2 rates.'
             self.opr_co = None
         else:
             self.opr_cp = opr_cp
