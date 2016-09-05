@@ -90,7 +90,7 @@ def writeImageParameters(temp, m, model):
     if model.binoutputfile:
         temp.append('\tpar->binoutputfile = "binoutputfile_%d.out";\n' % m)
     if model.gridfile:
-        temp.append('\tpar->gridfile = "gridfile_%d.out";\n' % m)
+        temp.append('\tpar->gridfile = "gridfile_s%s_%d.out";\n' % (model.name, m))
     temp.append('\n')
 
     # For each permutation, write an image block.
@@ -351,9 +351,6 @@ def writeVelocityStructure(temp, model):
     temp.append('\n}\n\n\n')
     return
 
-
-
-
 def averageModels(model):
 
     # model         : LIMEclass, parameters.
@@ -433,7 +430,7 @@ def combinePopfiles(model):
 
     if model.outputfile:
         popfiles = np.vstack([np.loadtxt('outputfile_%d.out' % m)
-                              for m in range(model.nmodels)])/T
+                              for m in range(model.nmodels)]).T
         popfiles[:3] /= sc.au
         np.save('%s%s_popfile' % (model.directory, model.name), popfiles)
     return
@@ -446,4 +443,14 @@ def combineBinPopFiles(model):
 
     if model.binoutputfile:
         raise NotImplementedError()
+    return
+
+def combineGridfiles(model):
+
+    # model         : LIMEclass, parameters.
+    #
+    # Move the grid files. TODO: Can we combine them?
+
+    if model.gridfile:
+        os.system('mv gridfile*.out %s' % model.directory)
     return

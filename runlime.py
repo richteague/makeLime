@@ -166,6 +166,7 @@ def run(name='tempmodelname',
 
     # Combine the model ensemble.
     make.averageModels(model)
+    make.combineGridfiles(model)
     make.combinePopfiles(model)
     make.combineBinPopFiles(model)
     make.getNoise(model)
