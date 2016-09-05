@@ -63,7 +63,7 @@ def run(name='tempmodelname',
         cleanup=True,
         blend=1,
         opr_cp=None,
-        rescale_abund=1.0,
+        depletion=1.0,
         waittime=20):
 
     # Start the clock to time the running of models.
@@ -113,7 +113,7 @@ def run(name='tempmodelname',
                        returnnoise=returnnoise,
                        blend=blend,
                        opr_cp=opr_cp,
-                       rescale_abund=rescale_abund
+                       depletion=depletion
                        )
 
     print '\n'

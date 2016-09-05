@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def RADEXnames(key):
 
     # Switch between RADEX names and numbers for collision partners.
@@ -28,33 +29,34 @@ class ratefile:
         self.mu = float(self.filein[3].strip())
         self.nlevels = int(self.filein[5].strip())
         self.ntransitions = int(self.filein[8+self.nlevels].strip())
-        self.npartners = int(self.filein[11+self.nlevels+self.ntransitions].strip())
+        self.npartners = self.filein[11+self.nlevels+self.ntransitions].strip()
+        self.npartners = int(self.npartners)
 
         # Read in the partner names and the bounding line values.
         self.partners = []
         self.linestarts = []
         self.lineends = []
-        n = 0
-        linestart = 12+self.nlevels+self.ntransitions
-        while n < self.npartners:
+        linestart = 12 + self.nlevels+self.ntransitions
+        for n in range(self.npartners):
             self.linestarts.append(linestart)
-            names = np.array(['H2', 'pH2', 'oH2', 'electrons', 'H', 'He', 'H+'])
+            names = np.array(['H2', 'pH2', 'oH2', 'e', 'H', 'He', 'H+'])
             name = names[int(self.filein[linestart+1][0])-1]
-            lineend = linestart+9+int(self.filein[linestart+3].strip())
+            lineend = linestart + 9 + int(self.filein[linestart+3].strip())
             self.partners.append(name)
             self.lineends.append(lineend)
             linestart = lineend
-            n += 1
 
         # Read in the energy level structure.
         self.levels = self.filein[7:7+self.nlevels]
         self.levels = np.array([[float(n) for n in levelsrow.strip().split()]
-                                 for levelsrow in self.levels]).T
+                                for levelsrow in self.levels]).T
 
         # Read in the radiative transitions.
-        self.transitions = self.filein[10+self.nlevels:10+self.nlevels+self.ntransitions]
-        self.transitions = np.array([[float(n) for n in transrow.strip().split()]
-                                      for transrow in self.transitions]).T
+        trans_start = 10 + self.nlevels
+        trans_end = trans_start + self.ntransitions
+        self.transitions = self.filein[trans_start:trans_end]
+        self.transitions = np.array([[float(n) for n in t.strip().split()]
+                                     for t in self.transitions]).T
 
         # Split into appropriate arrays.
         self.deltaE = self.levels[1]

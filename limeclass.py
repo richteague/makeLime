@@ -1,6 +1,6 @@
 import os
-import warnings
 import headerclass as header
+import lamdaclass as rates
 
 # Define all the properties for LIME runs.
 # Check all the variable types here.
@@ -44,7 +44,7 @@ class model:
                  returnnoise=False,
                  blend=0,
                  opr_cp=3.,
-                 rescale_abund=1.0,
+                 depletion=1.0,
                  ):
 
         print '\n'
@@ -125,9 +125,6 @@ class model:
         else:
             raise TypeError("stellarmass must be a float.")
 
-        # TODO: Currently set to deafult.
-        self.opratio = None
-
         # LIME properties.
 
         if type(pIntensity) is float:
@@ -154,11 +151,6 @@ class model:
             self.lte_only = int(lte_only)
         else:
             raise ValueError("lte_only must be True or False.")
-
-        if os.path.isfile(self.auxfiles+'/'+moldatfile):
-            self.moldatfile = moldatfile
-        else:
-            raise ValueError("No molecular data file found called %s." % moldatfile)
 
         if os.path.isfile(self.auxfiles+'/'+dust):
             self.dust = dust
@@ -217,9 +209,11 @@ class model:
             raise TypeError('pxls must be a number.')
 
         if (self.distance * self.imgres * self.pxls * 0.5 < self.rout):
+            proj_dist = self.imgres * self.distance * self.pxls
+            proj_size = 2. * self.rout
             print "Warning: Check distance and pixel scaling."
-            print "\t Image has projected distance of %.2f au," % (self.imgres * self.distance * self.pxls)
-            print "\t but the model has a size of %.2f au." % (2. * self.rout)
+            print "\t Image has projected distance of %.2f au," % proj_dist
+            print "\t but the model has a size of %.2f au." % proj_size
 
         if (type(unit) is int and unit in [0, 1, 2, 3]):
             self.unit = unit
@@ -232,17 +226,50 @@ class model:
         else:
             self.blend = blend
 
-        cps = ['H2', 'pH2', 'oH2', 'e', 'H', 'He', 'H+']
-        
-        if (opr_cp > 0. or opr_cp is None):
-            self.opr_cp = opr_cp
-        else:
-            raise ValueError("opr_cp must be positive.")
+        # Coillision partners and ortho- / para- ratios.
+        # By default, assume H2. If opr_cp is set, rescale 'dens' to
+        # ortho-H2 and para-H2.
 
-        if type(rescale_abund) is float:
-            self.rescale_abund = rescale_abund
+        ratefile = rates.ratefile(moldatfile)
+
+        if 'H2' in ratefile.partners:
+            H2_rates = True
         else:
-            raise TypeError("rescale_abund must be a float.")
+            H2_rates = False
+
+        if 'oH2' in ratefile.partners:
+            oH2_rates = True
+        else:
+            oH2_rates = False
+
+        if 'pH2' in ratefile.partners:
+            pH2_rates = True
+        else:
+            pH2_rates = False
+
+        if not (opr_cp > 0. or opr_cp is None):
+            raise ValueError("opr_cp must be positive or None.")
+        if (not H2_rates and not oH2_rates and not pH2_rates):
+            raise ValueError("No appropriate collisonal rates found.")
+
+        if (opr_cp is None and not H2_rates):
+            print 'Warning: No H2 collider density rates found.'
+            print '\t Assuming oH2 / pH2 ratio of 3.'
+            self.opr_cp = 3.
+        elif (type(opr_cp) is float and not oH2_rates and not pH2_rates):
+            print 'Warning: No ortho-H2 or para-H2 rates found.'
+            print '\t Assuming total H2 rates.'
+            self.opr_co = None
+        else:
+            self.opr_cp = opr_cp
+
+        # Include a depletion factor for the molecule.
+        # This allows for isotopologues to be included, for example.
+
+        if type(depletion) is float:
+            self.rescale_abund = depletion
+        else:
+            raise TypeError("depletion must be a float.")
 
         return
 
@@ -253,7 +280,7 @@ class model:
             elif None in types:
                 return inval
             else:
-                raise TypeError("Cannot find %s in %s." % (default, self.hdr.fn))
+                raise TypeError("No %s in %s." % (default, self.hdr.fn))
         elif type(inval) in types:
             return inval
         else:
