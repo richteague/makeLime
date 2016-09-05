@@ -13,8 +13,8 @@ class model:
                  headerfile='header.h',
                  moldatfile='molecule.dat',
                  transitions=[1],
-                 inclinations=[0],
-                 positionangles=[0],
+                 inclinations=[0.5],
+                 positionangles=[1.5708],
                  nchan=200,
                  velres=20,
                  pIntensity=1e5,
@@ -43,7 +43,7 @@ class model:
                  nmodels=1,
                  returnnoise=False,
                  blend=0,
-                 opr_cp=3.,
+                 opr_cp=None,
                  depletion=1.0,
                  ):
 
@@ -58,6 +58,8 @@ class model:
             self.name = name[:-5]
         else:
             self.name = name
+
+        self.moldatfile = moldatfile
 
         if type(outputfile) is bool:
             self.outputfile = outputfile
@@ -165,6 +167,9 @@ class model:
         else:
             self.transitions = transitions
 
+        # Must we specfiy the (inc, pa, azi) triplet.
+        # Due to the old code style, 
+
         if type(inclinations) is not list:
             self.thetas = [inclinations]
         else:
@@ -174,6 +179,9 @@ class model:
             self.phis = [positionangles]
         else:
             self.phis = positionangles
+
+        # TODO: Include possibiliy of lists of values.
+        self.azimuth = 0.0
 
         if (type(nchan) is float or type(nchan) is int):
             self.nchan = float(nchan)
