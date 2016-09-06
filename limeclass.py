@@ -87,7 +87,7 @@ class model:
             self.directory = '../'
 
         # The output files are booleans. If set to true, they will return
-        # the specified output files. The outputfile will combine all the 
+        # the specified output files. The outputfile will combine all the
         # output files run for each model. gridnoise will return one grid
         # per model. TODO: combine binoutputfile.
 
@@ -126,7 +126,7 @@ class model:
             raise NotImplementedError("Only cylindrical or polar coordinates.")
 
         # Chemical model properties from header file. This automatically reads
-        # in the number of dimensions (by counting c1arr, c2arr and c3arr), 
+        # in the number of dimensions (by counting c1arr, c2arr and c3arr),
         # the number of cells and the minimum and maximum radii.
 
         if type(headerfile) is str:
@@ -175,7 +175,7 @@ class model:
         else:
             raise TypeError("stellarmass must be a float.")
 
-        # Number of grid points for lime. pIntensity should be greater than 
+        # Number of grid points for lime. pIntensity should be greater than
         # sinkPoints but not required.
 
         if type(pIntensity) is float:
@@ -203,7 +203,7 @@ class model:
         else:
             raise ValueError("lte_only must be True or False.")
         if self.lte_only:
-            print 'Warning: Running non-LTE model. Will be slow.'       
+            print 'Warning: Running non-LTE model. Will be slow.'
 
         # Imaging parameters.
         # Make sure the appropriate variables are lists.
@@ -215,7 +215,7 @@ class model:
 
         # Must we specfiy the (inc, pa, azi) triplet.
         # Due to the old code style, these are theta and phi.
-        # TODO: Include azimuthal values, but this is not necessary for 
+        # TODO: Include azimuthal values, but this is not necessary for
         # azimuthally symmetric models.
 
         if type(inclinations) is not list:
