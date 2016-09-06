@@ -45,13 +45,16 @@ class model:
                  blend=0,
                  opr_cp=None,
                  depletion=1.0,
+                 r_inner=None,
+                 r_outer=None,
                  ):
 
         print '\n'
         self.path = os.path.dirname(__file__)
         self.auxfiles = self.path + '/AuxFiles'
 
-        # Output configurations.
+        # The name will be appended to all outputs. The .fits extension is not
+        # wanted so removed.
 
         if name[-5:] == '.fits':
             print "Removing '.fits' from model name."
@@ -59,7 +62,34 @@ class model:
         else:
             self.name = name
 
-        self.moldatfile = moldatfile
+        # Check that the requested collisional rate and dust opacity files are
+        # in the AuxFiles directory.
+
+        if os.path.isfile(self.auxfiles + '/' + moldatfile):
+            self.moldatfile = moldatfile
+        else:
+            raise ValueError("no %s found in AuxFiles." % moldatfile)
+
+        if os.path.isfile(self.auxfiles + '/' + dust):
+            self.dust = dust
+        else:
+            raise ValueError("no %s found in AuxFiles." % dust)
+
+        # This is the output directory. By default it is the starting folder.
+        # We check that this is a valid path, otherwise it defaults to '../'.
+
+        if type(directory) is str:
+            self.directory = directory
+        else:
+            raise TypeError('directory must be a path.')
+        if not os.path.exists(self.directory):
+            print "Warning: output directory not found. Defaulting to '../'."
+            self.directory = '../'
+
+        # The output files are booleans. If set to true, they will return
+        # the specified output files. The outputfile will combine all the 
+        # output files run for each model. gridnoise will return one grid
+        # per model. TODO: combine binoutputfile.
 
         if type(outputfile) is bool:
             self.outputfile = outputfile
@@ -70,6 +100,8 @@ class model:
             self.binoutputfile = binoutputfile
         else:
             raise TypeError("binoutputfile must be a Boolean.")
+        if self.binoutputfile:
+            raise NotImplementedError()
 
         if type(gridfile) is bool:
             self.gridfile = gridfile
@@ -80,11 +112,6 @@ class model:
             self.returnnoise = returnnoise
         else:
             raise TypeError("returnnoise must be a Boolean.")
-
-        if type(directory) is str:
-            self.directory = directory
-        else:
-            raise TypeError('directory must be a path.')
 
         if type(nmodels) is int:
             self.nmodels = nmodels
@@ -98,7 +125,9 @@ class model:
         else:
             raise NotImplementedError("Only cylindrical or polar coordinates.")
 
-        # Chemical model properties from header file.
+        # Chemical model properties from header file. This automatically reads
+        # in the number of dimensions (by counting c1arr, c2arr and c3arr), 
+        # the number of cells and the minimum and maximum radii.
 
         if type(headerfile) is str:
             self.hdr = header.headerFile(headerfile, coordsys=self.coordsys)
@@ -109,6 +138,16 @@ class model:
         self.rin = self.hdr.rin
         self.rout = self.hdr.rout
 
+        # If inner and outer radii are specifically supplied, we will
+        # overwrite those read from the header file.
+
+        if r_inner is not None:
+            self.rin = max(self.rin, r_inner)
+        if r_outer is not None:
+            self.rout = min(self.rout, r_outer)
+        if self.rin >= self.rout:
+            raise ValueError("Outer radius less than inner radius.")
+
         # Additional model properties, if None specified, check if provided by
         # the chemical header, otherwise, revert to default value (=None).
 
@@ -118,29 +157,39 @@ class model:
         self.dtemp = self.checkTypes(dtemp, 'dtemp', [str, float, None])
         self.g2d = self.checkTypes(g2d, 'gastodust', [str, float, None])
         self.doppler = self.checkTypes(doppler, 'doppler', [str, float, None])
+
+        # The doppler type defines whether the microturbulence is specified in
+        # meters per second, 'absolute', or a fraction of the local sound 
+        # speed, 'mach'.
+
         if (dopplertype == 'absolute' or dopplertype == 'mach'):
             self.dopplertype = dopplertype
         else:
             raise ValueError("dopplertype must be 'absolute' or 'mach'.")
+
+        # The stellar mass is required for the Keplerian rotation.
+        # TODO: Allow the inclusion of an array of velocity profiles.
+
         if type(stellarmass) is float:
             self.stellarmass = stellarmass
         else:
             raise TypeError("stellarmass must be a float.")
 
-        # LIME properties.
+        # Number of grid points for lime. pIntensity should be greater than 
+        # sinkPoints but not required.
 
         if type(pIntensity) is float:
             self.pIntensity = pIntensity
         else:
             raise TypeError("pIntensity must be a float.")
-
         if type(sinkPoints) is float:
             self.sinkPoints = sinkPoints
         else:
             raise TypeError("sinkPoints must be a float.")
-
         if self.sinkPoints > self.pIntensity:
             print "Warning: sinkPoints > pIntensity."
+
+        # Sampling as in the lim manual. sampling = 2 is spherical.
 
         if (type(sampling) is int and sampling < 3):
             self.sampling = sampling
@@ -153,11 +202,8 @@ class model:
             self.lte_only = int(lte_only)
         else:
             raise ValueError("lte_only must be True or False.")
-
-        if os.path.isfile(self.auxfiles+'/'+dust):
-            self.dust = dust
-        else:
-            raise ValueError("No dust opacities file found called %s." % dust)
+        if self.lte_only:
+            print 'Warning: Running non-LTE model. Will be slow.'       
 
         # Imaging parameters.
         # Make sure the appropriate variables are lists.
@@ -169,6 +215,8 @@ class model:
 
         # Must we specfiy the (inc, pa, azi) triplet.
         # Due to the old code style, these are theta and phi.
+        # TODO: Include azimuthal values, but this is not necessary for 
+        # azimuthally symmetric models.
 
         if type(inclinations) is not list:
             self.thetas = [inclinations]
@@ -182,6 +230,9 @@ class model:
 
         # TODO: Include possibiliy of lists of values.
         self.azimuth = 0.0
+
+        # Specify the spectral axis in meters per second.
+        # TODO: Allow for a spectral scan.
 
         if (type(nchan) is float or type(nchan) is int):
             self.nchan = float(nchan)
@@ -200,6 +251,9 @@ class model:
         if self.antialias > 4:
             print "Warning: High antialias value of %d." % self.antialias
             print "\t Ray tracing may be slow..."
+
+        # Specify the field of view. Will complain if the model is not fully
+        # imaged with the specified image axes.
 
         if type(imgres) is float:
             self.imgres = imgres
@@ -233,6 +287,8 @@ class model:
             print 'Warning: Unknown blend value. Set to 0.'
         else:
             self.blend = blend
+        if self.blend:
+            print 'Warning: Line blending on, will be slow.'
 
         # Coillision partners and ortho- / para- ratios.
         # By default, assume H2. If opr_cp is set, rescale 'dens' to

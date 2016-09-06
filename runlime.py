@@ -63,8 +63,10 @@ def run(name='tempmodelname',
         cleanup=True,
         blend=1,
         opr_cp=None,
+        r_inner=None,
+        r_outer=None,
         depletion=1.0,
-        waittime=20):
+        waittime=10.):
 
     # Start the clock to time the running of models.
     t0 = time.time()
@@ -72,10 +74,6 @@ def run(name='tempmodelname',
     # Create the temporary folder to work in and move there.
     fname = makeUniqueFolder()
     os.chdir(fname)
-    path = os.path.dirname(__file__) + '/AuxFiles'
-    os.system('cp ../%s .' % headerfile)
-    os.system('cp %s/%s .' % (path, moldatfile))
-    os.system('cp %s/%s .' % (path, dust))
 
     # Generate a LIME model class instance.
     model = lime.model(name=name,
@@ -113,8 +111,16 @@ def run(name='tempmodelname',
                        returnnoise=returnnoise,
                        blend=blend,
                        opr_cp=opr_cp,
-                       depletion=depletion
+                       depletion=depletion,
+                       r_inner=r_inner,
+                       r_outer=r_outer,
                        )
+
+    # Copy the appropriate files into the working directory.
+    path = os.path.dirname(__file__) + '/AuxFiles'
+    os.system('cp ../%s .' % headerfile)
+    os.system('cp %s/%s .' % (path, moldatfile))
+    os.system('cp %s/%s .' % (path, dust))
 
     print '\n'
     print 'Input is %dD-%s coordinates.' % (model.ndim, model.coordsys)
