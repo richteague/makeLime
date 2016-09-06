@@ -130,7 +130,7 @@ class model:
         # the number of cells and the minimum and maximum radii.
 
         if type(headerfile) is str:
-            self.hdr = header.headerFile(headerfile, coordsys=self.coordsys)
+            self.hdr = header.headerFile('../'+headerfile, coordsys=self.coordsys)
         else:
             raise TypeError('headerfile must be a path.')
         self.ndim = self.hdr.ndim
@@ -202,7 +202,7 @@ class model:
             self.lte_only = int(lte_only)
         else:
             raise ValueError("lte_only must be True or False.")
-        if self.lte_only:
+        if not self.lte_only:
             print 'Warning: Running non-LTE model. Will be slow.'
 
         # Imaging parameters.
