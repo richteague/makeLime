@@ -168,7 +168,7 @@ class model:
             self.transitions = transitions
 
         # Must we specfiy the (inc, pa, azi) triplet.
-        # Due to the old code style, 
+        # Due to the old code style, these are theta and phi.
 
         if type(inclinations) is not list:
             self.thetas = [inclinations]

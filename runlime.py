@@ -134,7 +134,6 @@ def run(name='tempmodelname',
     # Check the number of *.x files to guess how many are running.
     # If nohup_X.out contains segmentation fault, then quit.
 
-    check_segfault_time = time.time()
     remaining = -1
     print '\n'
     while len([fn for fn in os.listdir('./') if fn.endswith('.x')]) > 0:
