@@ -408,7 +408,7 @@ def writeFitsHeader(filename, model, theta, phi):
 
     data, header = fits.getdata(filename, header=True)
     header['DISTANCE'] = model.distance, 'Distance in parsec.'
-    header['CHEMMOD'] = model.hdr.fn, 'Chemical model used.'
+    header['CHEMMOD'] = model.hdr.fn.split('/')[-1], 'Chemical model used.'
     header['INC'] = theta, 'Inclianation in radians.'
     header['PA'] = phi, 'Position angle in radians.'
     header['NMODELS'] = model.nmodels, 'Number of models averaged.'

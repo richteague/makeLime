@@ -48,7 +48,7 @@ class ratefile:
 
         # Read in the energy level structure.
         self.levels = self.filein[7:7+self.nlevels]
-        self.levels = np.array([[float(n) for n in levelsrow.strip().split()]
+        self.levels = np.array([[n for n in levelsrow.strip().split()]
                                 for levelsrow in self.levels]).T
 
         # Read in the radiative transitions.
