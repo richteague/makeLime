@@ -170,6 +170,7 @@ def run(name='tempmodelname',
         print 'All instances complete.\n'
 
     # Combine the model ensemble.
+    make.resampleVelocities(model)
     make.averageModels(model)
     make.combineGridfiles(model)
     make.combinePopfiles(model)

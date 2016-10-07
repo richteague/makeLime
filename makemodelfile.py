@@ -109,21 +109,11 @@ def writeImageParameters(temp, m, model):
 
 
 def writeImageBlock(temp, nimg, m, theta, phi, trans, model):
-
-    # temp          : str, lines of input file.
-    # nimg          : int, image nuumber.
-    # m             : int, model number.
-    # theta         : float, inclination.
-    # phi           : float, position angle.
-    # transition    : int, transition number.
-    # model         : LIMEclass, parameters.
-    #
-    # Write an image block with the given parameters. Use the filename:
-    # nmodel_inclination_positionangle_transition.fits
-
+    """Write an image block with the given parameters. Use the filename:
+    nmodel_inclination_positionangle_transition.fits"""
     filename = '%s_%.3f_%.3f_%d' % (m, theta, phi, trans)
-    temp.append('\timg[%d].nchan = %d;\n' % (nimg, model.nchan))
-    temp.append('\timg[%d].velres = %d;\n' % (nimg, model.velres))
+    temp.append('\timg[%d].nchan = %d;\n' % (nimg, model.nchan * model.oversample))
+    temp.append('\timg[%d].velres = %.3f;\n' % (nimg, model.velres / model.oversample))
     temp.append('\timg[%d].trans = %d;\n' % (nimg, trans))
     temp.append('\timg[%d].pxls = %d;\n' % (nimg, model.pxls))
     temp.append('\timg[%d].imgres = %.3f;\n' % (nimg, model.imgres))
@@ -138,12 +128,7 @@ def writeImageBlock(temp, nimg, m, theta, phi, trans, model):
 
 
 def writeCoords(temp, model):
-
-    # temp          : str, lines of input file.
-    # model         : LIMEclass, parameters.
-    #
-    # Define the model coordinates for each function.
-
+    """Define the model coordinates for each function."""
     if not (model.coordsys is 'cylindrical' and model.ndim is 2):
         raise NotImplementedError
     if model.coordsys is 'cylindrical':
@@ -241,78 +226,52 @@ def writeDensity(temp, model):
 
 
 def writeDopplerBroadening(temp, model):
-
-    # temp          : str, lines of input file.
-    # model         : LIMEclass, parameters.
-    #
-    # Include the mirco-turbulence parameter. This can be either in m/s,
-    # model.dopplertype = 'absolute', or a fraction of the local soundspeed,
-    # model.dopplertyle = 'mach'. This does not include thermal broadening.
-
+    """Include the mirco-turbulence parameter. This can be either in m/s,
+    model.dopplertype = 'absolute', or a fraction of the local soundspeed,
+    model.dopplertyle = 'mach'. This does not include thermal broadening."""
     if model.doppler is None:
         model.doppler = 0.0
-
     s = 'void doppler(double x, double y, double z, double *doppler) {\n\n'
     temp.append(s)
     writeCoords(temp, model)
-
     if model.dopplertype == 'mach':
         temp.append('\tdouble val[2];\n')
         temp.append('\ttemperature(x, y, z, &val[2]);\n')
-
     if type(model.doppler) is str:
         s = '\t*doppler = findvalue(c1, c2, c3, %s);\n' % model.doppler
         temp.append(s)
     elif type(model.doppler) is float:
         temp.append('\t*doppler = %.3f;\n' % model.doppler)
-
     if model.dopplertype == 'mach':
         temp.append('\t*doppler *= sqrt(KBOLTZ * val[0] / 2.34 / AMU);\n')
-
     temp.append('\n}\n\n\n')
     return
 
-
 def writeGastoDust(temp, model, ming2d=1.):
-
-    # temp          : str, lines of input file.
-    # model         : LIMEclass, parameters.
-    # ming2d        : float, minimum value for gas-to-dust.
-    #
-    # Write the gas-to-dust ratios. This is relative to n(H2),
-    # which is the sum of all density[i] values.
-
+    """Write the gas-to-dust ratios. This is relative to n(H2), which is the sum
+    of all density[i] values."""
     if model.g2d is None:
         return
     else:
         s = 'void gasIIdust(double x, double y, double z, double *gtd) {\n\n'
         temp.append(s)
-
     if type(model.g2d) is float:
         temp.append('\t*gtd = %.1f;\n\n' % model.g2d)
     elif type(model.g2d) is str:
         writeCoords(temp, model)
         temp.append('\t*gtd = findvalue(c1, c2, c3, %s);\n\n' % model.g2d)
-
     s = '\tif (*gtd < %.1f) {\n\t\t*gtd = %.1f;\n\t}\n' % (ming2d, ming2d)
     temp.append(s)
     temp.append('}\n\n\n')
     return
 
-
 def writeTemperatures(temp, model):
-
-    # temp          : str, lines of input file.
-    # model         : LIMEclass, parameters.
-    #
-    # Write the gas and dust temperatures. If dtemp is a float, then rescale
-    # the gas temperature. If it is a string, use that array name as input.
-
+    """Write the gas and dust temperatures. If dtemp is a float, then rescale
+    the gas temperature. If it is a string, use that array name as input."""
     s = 'void temperature(double x, double y, double z,'
     s += 'double *temperature) {\n\n'
     temp.append(s)
     writeCoords(temp, model)
-
     if type(model.temp) is str:
         s = '\ttemperature[0] = findvalue(c1, c2, c3, %s);\n' % model.temp
         temp.append(s)
@@ -321,7 +280,6 @@ def writeTemperatures(temp, model):
         temp.append(s)
     else:
         raise TypeError()
-
     if type(model.dtemp) is float:
         s = '\ttemperature[1] = %.3f * temperature[0];\n' % model.dtemp
         temp.append(s)
@@ -334,22 +292,14 @@ def writeTemperatures(temp, model):
         temp.append(s)
     elif model.dtemp is not None:
         raise TypeError()
-
     temp.append('}\n\n\n')
     return
 
-
 def writeVelocityStructure(temp, model):
-
-    # temp          : str, lines of input file.
-    # model         : LIMEclass, parameters.
-    #
-    # Write the velocity structure section. Only Keplerian rotation is
-    # possible. TODO: Include arrays of velocities.
-
+    """Write the velocity structure section. Only Keplerian rotation is
+    possible. TODO: Include arrays of velocities."""
     s = 'void velocity(double x, double y, double z, double *velocity) {\n\n'
     temp.append(s)
-
     if model.stellarmass is not None:
         s = '\tvelocity[0] = sqrt(6.67e-11 * %.3f ' % model.stellarmass
         s += '* 2e30 / sqrt(x*x + y*y + z*z));\n'
@@ -365,47 +315,41 @@ def writeVelocityStructure(temp, model):
     temp.append('\n}\n\n\n')
     return
 
-
-def averageModels(model):
-
-    # model         : LIMEclass, parameters.
-    #
-    # Average over all the models. Move the combined files to the correct
-    # directory.
-
-    if model.nmodels == 1:
-        for t in model.thetas:
-            for p in model.phis:
-                for j in model.transitions:
-                    fn = '%s_%.3f_%.3f_%d.fits' % (model.name, t, p, j)
-                    os.system('mv 0_%.3f_%.3f_%d.fits %s' % (t, p, j, fn))
-                    writeFitsHeader(fn, model, t, p)
-                    os.system('mv %s %s' % (fn, model.directory))
-    else:
-        for t in model.thetas:
-            for p in model.phis:
-                for j in model.transitions:
-                    avg = [fits.getdata('%d_%.3f_%.3f_%d.fits' % (m, t, p, j))
-                           for m in range(model.nmodels)]
-                    averaged = np.average(avg, axis=0)
-                    hdulist = fits.open('0_%.3f_%.3f_%d.fits' % (t, p, j))
-                    hdulist[0].data = averaged
-                    filename = model.name + '_%.3f_%.3f_%d.fits' % (t, p, j)
-                    hdulist.writeto(filename)
-                    writeFitsHeader(filename, model, t, p)
-                    os.system('mv %s %s' % (filename, model.directory))
+def resampleVelocities(model):
+    """Loop through all fits cubes in the folder and resamples the velocity
+    structure of the final fits cube."""
+    for fn in os.listdir('./'):
+        if not fn.endswith('.fits'):
+            continue
+        hdu = fits.open(fn)
+        data = hdu[0].data
+        data = [np.sum(data[i:i+10] for i in range(data.shape[0]))]
+        data = np.array([np.sum(cube[i:i+model.oversample], axis=0)
+                         for i in range(data.shape[0])[::model.oversample]])
+        hdu[0].data = data
+        hdu.writeto(fn)
     return
 
+def averageModels(model):
+    """Average over all the models. Move the combined files to the correct
+    directory."""
+    for t in model.thetas:
+        for p in model.phis:
+            for j in model.transitions:
+                if model.nmodels != 1:
+                    avg = [fits.getdata('%d_%.3f_%.3f_%d.fits' % (m, t, p, j))
+                           for m in range(model.nmodels)]
+                    hdu = fits.open('0_%.3f_%.3f_%d.fits' % (t, p, j))
+                    hdu[0].data = np.average(avg, axis=0)
+                    hdu.writeto(fn)
+                fn = model.name + '_%.3f_%.3f_%d.fits' % (t, p, j)
+                writeFitsHeader(fn, model, t, p)
+                os.system('mv %s %s' % (fn, model.directory))
+    return
 
 def writeFitsHeader(filename, model, theta, phi):
-
-    # filename      : str, filename to edit the properties of.
-    # model         : LIMEclass, parameters.
-    # theta         : float, inclination angle.
-    # phi           : float, position angle.
-    #
-    # Include model data in the final .fits file header.
-
+    """Include model data in the final .fits file header. Needs to also alter the
+    velocity axes in the case of oversampling the spectral axis."""
     data, header = fits.getdata(filename, header=True)
     header['DISTANCE'] = model.distance, 'Distance in parsec.'
     header['CHEMMOD'] = model.hdr.fn.split('/')[-1], 'Chemical model used.'
@@ -414,17 +358,16 @@ def writeFitsHeader(filename, model, theta, phi):
     header['NMODELS'] = model.nmodels, 'Number of models averaged.'
     if model.opr_cp is not None:
         header['H2_OPR'] = model.opr_cp, 'H2 ortho to para ratio.'
+    if model.oversample > 1:
+        header['NAXIS3'] = data.shape[0]
+        header['CDELT3'] = model.velres
+        header['CRPIX3'] = (data.shape[0] + 1.) / 2.
     fits.writeto(filename, data, header, clobber=True)
     print 'Appended header with model properties.'
     return
 
-
 def getNoise(model):
-
-    # model         : LIMEclass, parameters.
-    #
-    # Estimate the MCMC noise from the model ensemble.
-
+    """Estimate the MCMC noise from the model ensemble."""
     if (model.returnnoise and model.nmodels > 1):
         for t in model.thetas:
             for p in model.phis:
@@ -439,13 +382,8 @@ def getNoise(model):
                     os.system('mv %s %s' % (fn, model.directory))
     return
 
-
 def combinePopfiles(model):
-
-    # model         : LIMEclass, parameters.
-    #
-    # Combine the population files from the model ensemble.
-
+    """Combine the population files from the model ensemble."""
     if model.outputfile:
         popfiles = np.vstack([np.loadtxt('outputfile_%d.out' % m)
                               for m in range(model.nmodels)]).T
@@ -453,24 +391,14 @@ def combinePopfiles(model):
         np.save('%s%s_popfile' % (model.directory, model.name), popfiles)
     return
 
-
 def combineBinPopFiles(model):
-
-    # model         : LIMEclass, parameters.
-    #
-    # Combine the binary population files from the model ensemble.
-
+    """Combine the binary population files from the model ensemble."""
     if model.binoutputfile:
         raise NotImplementedError()
     return
 
-
 def combineGridfiles(model):
-
-    # model         : LIMEclass, parameters.
-    #
-    # Move the grid files. TODO: Can we combine them?
-
+    """Move the grid files."""
     if model.gridfile:
         os.system('mv gridfile*.out %s' % model.directory)
     return

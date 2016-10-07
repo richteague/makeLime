@@ -47,11 +47,14 @@ class model:
                  depletion=1.0,
                  r_inner=None,
                  r_outer=None,
+                 oversample=10,
                  ):
 
         print '\n'
         self.path = os.path.dirname(__file__)
         self.auxfiles = self.path + '/AuxFiles'
+        self.oversample = int(oversample)
+
 
         # The name will be appended to all outputs. The .fits extension is not
         # wanted so removed.
@@ -159,7 +162,7 @@ class model:
         self.doppler = self.checkTypes(doppler, 'doppler', [str, float, None])
 
         # The doppler type defines whether the microturbulence is specified in
-        # meters per second, 'absolute', or a fraction of the local sound 
+        # meters per second, 'absolute', or a fraction of the local sound
         # speed, 'mach'.
 
         if (dopplertype == 'absolute' or dopplertype == 'mach'):
