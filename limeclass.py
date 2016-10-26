@@ -141,6 +141,8 @@ class model:
         self.rin = self.hdr.rin
         self.rout = self.hdr.rout
 
+        # If there is a central concentration, i.e. rin is 0, then we must limit
+        # the minimum scale.
         # If inner and outer radii are specifically supplied, we will
         # overwrite those read from the header file.
 

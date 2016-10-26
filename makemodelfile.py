@@ -51,7 +51,7 @@ def writeImageParameters(temp, m, model):
     # Include the radiative transfer parameters.
 
     temp.append('\tpar->radius = %.1f*AU;\n' % model.rout)
-    temp.append('\tpar->minScale = %.2f*AU;\n' % model.rin)
+    temp.append('\tpar->minScale = %.2f*AU;\n' % (max(model.rin, 0.01))
     temp.append('\tpar->pIntensity = %.0f;\n' % model.pIntensity)
     temp.append('\tpar->sinkPoints = %.0f;\n' % model.sinkPoints)
     temp.append('\tpar->dust = "%s";\n' % model.dust)
@@ -113,7 +113,7 @@ def writeImageBlock(temp, nimg, m, theta, phi, trans, model):
     nmodel_inclination_positionangle_transition.fits"""
     filename = '%s_%.3f_%.3f_%d' % (m, theta, phi, trans)
     temp.append('\timg[%d].nchan = %d;\n' % (nimg, model.nchan * model.oversample))
-    temp.append('\timg[%d].velres = %.3f;\n' % (nimg, model.velres / model.oversample))
+    temp.append('\timg[%d].velres = %.3f;\n' % (nimg, (model.velres / model.oversample)))
     temp.append('\timg[%d].trans = %d;\n' % (nimg, trans))
     temp.append('\timg[%d].pxls = %d;\n' % (nimg, model.pxls))
     temp.append('\timg[%d].imgres = %.3f;\n' % (nimg, model.imgres))
@@ -317,17 +317,16 @@ def writeVelocityStructure(temp, model):
 
 def resampleVelocities(model):
     """Loop through all fits cubes in the folder and resamples the velocity
-    structure of the final fits cube."""
+    structure of the final fits cube. I'm not sure if this is correct."""
     for fn in os.listdir('./'):
         if not fn.endswith('.fits'):
             continue
         hdu = fits.open(fn)
         data = hdu[0].data
-        data = [np.sum(data[i:i+10] for i in range(data.shape[0]))]
-        data = np.array([np.sum(cube[i:i+model.oversample], axis=0)
+        data = np.array([np.average(data[i:i+model.oversample], axis=0)
                          for i in range(data.shape[0])[::model.oversample]])
         hdu[0].data = data
-        hdu.writeto(fn)
+        hdu.writeto(fn, clobber=True)
     return
 
 def averageModels(model):
@@ -336,13 +335,15 @@ def averageModels(model):
     for t in model.thetas:
         for p in model.phis:
             for j in model.transitions:
+                fn = model.name + '_%.3f_%.3f_%d.fits' % (t, p, j)
                 if model.nmodels != 1:
                     avg = [fits.getdata('%d_%.3f_%.3f_%d.fits' % (m, t, p, j))
                            for m in range(model.nmodels)]
                     hdu = fits.open('0_%.3f_%.3f_%d.fits' % (t, p, j))
                     hdu[0].data = np.average(avg, axis=0)
                     hdu.writeto(fn)
-                fn = model.name + '_%.3f_%.3f_%d.fits' % (t, p, j)
+                else:
+                    os.system('mv 0_%.3f_%.3f_%d.fits %s' % (t, p, j, fn))
                 writeFitsHeader(fn, model, t, p)
                 os.system('mv %s %s' % (fn, model.directory))
     return
