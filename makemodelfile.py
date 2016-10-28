@@ -51,7 +51,7 @@ def writeImageParameters(temp, m, model):
     # Include the radiative transfer parameters.
 
     temp.append('\tpar->radius = %.1f*AU;\n' % model.rout)
-    temp.append('\tpar->minScale = %.2f*AU;\n' % (max(model.rin, 0.01))
+    temp.append('\tpar->minScale = %.2f*AU;\n' % (max(model.rin, 0.01)))
     temp.append('\tpar->pIntensity = %.0f;\n' % model.pIntensity)
     temp.append('\tpar->sinkPoints = %.0f;\n' % model.sinkPoints)
     temp.append('\tpar->dust = "%s";\n' % model.dust)
@@ -107,6 +107,14 @@ def writeImageParameters(temp, m, model):
 
     return
 
+
+def removeDust(temp):
+    """Removes the dust weighting from the dust opacities."""
+    # ToDo: ONLY TEMPORARY!
+    for i in range(2):
+        temp = temp.replace('dustWeights[%d] = 1.0' % i, 
+                            'dustWeights[%d] = 0.0' % i)
+    return temp
 
 def writeImageBlock(temp, nimg, m, theta, phi, trans, model):
     """Write an image block with the given parameters. Use the filename:
