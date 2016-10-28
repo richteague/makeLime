@@ -3,11 +3,12 @@
 import os
 import time
 import makemodelfile as make
+import combinefiles as comb
 import limeclass as lime
 
 
-# Make a unique folder.
 def makeUniqueFolder(fname='tempfolder', path='./'):
+    """Make a folder with a unique name."""
     if not os.path.isdir(path+fname):
         os.makedirs(path+fname)
     else:
@@ -19,123 +20,43 @@ def makeUniqueFolder(fname='tempfolder', path='./'):
     return fname
 
 
-# Convert seconds to hours, minutes, seconds.
 def seconds2hms(seconds):
+    """Convert seconds to hours, minutes, seconds."""
     m, s = divmod(seconds, 60)
     h, m = divmod(m, 60)
     return '%d:%02d:%02d' % (h, m, s)
 
 
-# Run LIME models.
-def run(name='tempmodelname',
-        headerfile='header.h',
-        moldatfile='molecularrates.dat',
-        transitions=[0],
-        inclinations=[0],
-        positionangles=[0],
-        nchan=200,
-        velres=20,
-        pIntensity=1e5,
-        sinkPoints=3e3,
-        antialias=1,
-        sampling=2,
-        lte_only=1,
-        imgres=0.065,
-        distance=54.,
-        pxls=128,
-        unit=1,
-        stellarmass=0.6,
-        outputfile=False,
-        binoutputfile=False,
-        gridfile=False,
-        dens=None,
-        temp=None,
-        dtemp=None,
-        abund=None,
-        g2d=None,
-        doppler=None,
-        dopplertype='absolute',
-        coordsys='cylindrical',
-        dust='jena_thin_e6.tab',
-        directory='../',
-        nmodels=1,
-        returnnoise=False,
-        cleanup=True,
-        blend=0,
-        opr_cp=None,
-        r_inner=None,
-        r_outer=None,
-        depletion=1.0,
-        waittime=10.,
-        oversample=1.):
+def run(headerfile, moldatfile, **kwargs):
+    """ Run a LIME model. Check readme for possible kwargs and defaults."""
 
     # Start the clock to time the running of models.
+    waittime = kwargs.get('wait', 10.)
     t0 = time.time()
 
     # Create the temporary folder to work in and move there.
-    fname = makeUniqueFolder()
-    os.chdir(fname)
-    # Copy the appropriate files into the working directory.
-    path = os.path.dirname(__file__) + '/AuxFiles'
-    os.system('cp ../%s .' % headerfile)
-    os.system('cp %s/%s .' % (path, moldatfile))
-    os.system('cp %s/%s .' % (path, dust))
+    folder_name = makeUniqueFolder()
+    os.chdir(folder_name)
 
     # Generate a LIME model class instance.
-    model = lime.model(name=name,
-                       headerfile=headerfile,
-                       moldatfile=moldatfile,
-                       transitions=transitions,
-                       inclinations=inclinations,
-                       positionangles=positionangles,
-                       nchan=nchan,
-                       velres=velres,
-                       pIntensity=pIntensity,
-                       sinkPoints=sinkPoints,
-                       antialias=antialias,
-                       sampling=sampling,
-                       lte_only=lte_only,
-                       imgres=imgres,
-                       distance=distance,
-                       pxls=pxls,
-                       unit=unit,
-                       stellarmass=stellarmass,
-                       outputfile=outputfile,
-                       binoutputfile=binoutputfile,
-                       gridfile=gridfile,
-                       dens=dens,
-                       temp=temp,
-                       dtemp=dtemp,
-                       abund=abund,
-                       g2d=g2d,
-                       doppler=doppler,
-                       dopplertype=dopplertype,
-                       coordsys=coordsys,
-                       dust=dust,
-                       directory=directory,
-                       nmodels=nmodels,
-                       returnnoise=returnnoise,
-                       blend=blend,
-                       opr_cp=opr_cp,
-                       depletion=depletion,
-                       r_inner=r_inner,
-                       r_outer=r_outer,
-                       oversample=oversample,
-                       )
+    model = lime.model(headerfile, moldatfile, **kwargs)
+    print 'Input is in %dD-%s coordinates.' % (model.ndim, model.coordsys)
+    print 'Assuming a value of minScale = %.2f au.' % model.minScale
+    print 'Assuming a value of radius = %.2f au.' % model.radius
 
-
-    print '\n'
-    print 'Input is %dD-%s coordinates.' % (model.ndim, model.coordsys)
-    print 'Model bounds are %.2f and %.2f au' % (model.rin, model.rout)
+    # Copy the appropriate files into the working directory.
+    path = os.path.dirname(__file__) + '/AuxFiles'
+    os.system('cp ../%s .' % model.header)
+    os.system('cp %s/%s .' % (path, model.moldatfile))
+    os.system('cp %s/%s .' % (path, model.dust))
 
     # For each iteration, run a model with a pause of waittime seconds.
     print '\n'
-    for m in range(nmodels):
-        print 'Running model %d of %d.' % (m+1, nmodels)
+    for m in range(model.nmodels):
+        print 'Running model %d of %d.' % (m+1, model.nmodels)
         make.makeFile(m, model)
-        cmd = 'nohup lime -n -f -p 20 model_%d.c >nohup_%d.out 2>&1 &' % (m, m)
+        cmd = 'nohup lime -n -f model_%d.c >nohup_%d.out 2>&1 &' % (m, m)
         os.system(cmd)
-        waittime = max(10., waittime)
         time.sleep(waittime)
 
     # Make sure all the models have run.
@@ -164,7 +85,8 @@ def run(name='tempmodelname',
             print 'Found %d segmentation faults.' % coresdumped
             break
 
-    if len([fn for fn in os.listdir('./') if fn.endswith('.fits')]) < nmodels:
+    models_run = len([fn for fn in os.listdir('./') if fn.endswith('.fits')])
+    if models_run < model.nmodels:
         print 'Not all models were successfully run.'
         print 'Aborting without clean-up.\n'
         return
@@ -172,18 +94,19 @@ def run(name='tempmodelname',
         print 'All instances complete.\n'
 
     # Combine the model ensemble.
-    make.resampleVelocities(model)
-    make.averageModels(model)
+    comb.resampleVelocities(model)
+    comb.averageModels(model)
+    comb.moveModels(model)
+    comb.moveModels(model, suffix='_noise')
     make.combineGridfiles(model)
     make.combinePopfiles(model)
     make.combineBinPopFiles(model)
-    make.getNoise(model)
 
     # Clean up.
     os.chdir('../')
-    if cleanup:
+    if kwargs.get('cleanup', True):
         print 'Cleaning up temporary folders.'
-        os.system('rm -rf %s' % fname)
+        os.system('rm -rf %s' % folder_name)
 
     # Print the total time.
     print 'Finished in %s.\n\n' % seconds2hms(time.time() - t0)

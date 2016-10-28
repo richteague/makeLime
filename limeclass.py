@@ -1,279 +1,206 @@
 import os
 import headerclass as header
 import lamdaclass as rates
-
-# Define all the properties for LIME runs.
-# Check all the variable types here.
+import numpy as np
 
 
 class model:
 
-    def __init__(self,
-                 name='output',
-                 headerfile='header.h',
-                 moldatfile='molecule.dat',
-                 transitions=[1],
-                 inclinations=[0.5],
-                 positionangles=[1.5708],
-                 nchan=200,
-                 velres=20,
-                 pIntensity=1e5,
-                 sinkPoints=3e3,
-                 antialias=1,
-                 sampling=2,
-                 lte_only=1,
-                 imgres=0.065,
-                 distance=54.,
-                 pxls=128,
-                 unit=0,
-                 stellarmass=0.6,
-                 outputfile=False,
-                 binoutputfile=False,
-                 gridfile=False,
-                 dens=None,
-                 temp=None,
-                 dtemp=None,
-                 abund=None,
-                 g2d=None,
-                 doppler=None,
-                 dopplertype='absolute',
-                 coordsys='cylindrical',
-                 dust='jena_thin_e6.tab',
-                 directory='../',
-                 nmodels=1,
-                 returnnoise=False,
-                 blend=0,
-                 opr_cp=None,
-                 depletion=1.0,
-                 r_inner=None,
-                 r_outer=None,
-                 oversample=10,
-                 ):
+    def __init__(self, headerfile, moldatfile, **kwargs):
 
-        print '\n'
+        # This class is called from `tempfolder`.
+        # Set up the paths appropriately.
+        # TODO: Allow for dust / collisional rates in current directory.
+
         self.path = os.path.dirname(__file__)
-        self.auxfiles = self.path + '/AuxFiles'
-        self.oversample = int(oversample)
-
-
-        # The name will be appended to all outputs. The .fits extension is not
-        # wanted so removed.
-
-        if name[-5:] == '.fits':
-            print "Removing '.fits' from model name."
-            self.name = name[:-5]
-        else:
-            self.name = name
-
-        # Check that the requested collisional rate and dust opacity files are
-        # in the AuxFiles directory.
-
-        if os.path.isfile(self.auxfiles + '/' + moldatfile):
-            self.moldatfile = moldatfile
-        else:
-            raise ValueError("no %s found in AuxFiles." % moldatfile)
-
-        if os.path.isfile(self.auxfiles + '/' + dust):
-            self.dust = dust
-        else:
-            raise ValueError("no %s found in AuxFiles." % dust)
-
-        # This is the output directory. By default it is the starting folder.
-        # We check that this is a valid path, otherwise it defaults to '../'.
-
-        if type(directory) is str:
-            self.directory = directory
-        else:
-            raise TypeError('directory must be a path.')
+        self.auxfiles = self.path + '/AuxFiles/'
+        self.directory = kwargs.get('directory', '../')
         if not os.path.exists(self.directory):
-            print "Warning: output directory not found. Defaulting to '../'."
-            self.directory = '../'
+            os.mkdir(self.directory)
 
-        # The output files are booleans. If set to true, they will return
-        # the specified output files. The outputfile will combine all the
-        # output files run for each model. gridnoise will return one grid
-        # per model. TODO: combine binoutputfile.
+        # LIME model parameters, read the manual for more info.
+        # https://lime.readthedocs.io/en/latest/usermanual.html#parameters
+        # These should mostly be read from the header file.
 
-        if type(outputfile) is bool:
-            self.outputfile = outputfile
-        else:
-            raise TypeError("outputfile must be a Boolean.")
+        if not self.checkexistance(headerfile, '../'):
+            raise ValueError('%s not found.' % headerfile)
+        self.header = header.headerFile('../' + headerfile)
 
-        if type(binoutputfile) is bool:
-            self.binoutputfile = binoutputfile
-        else:
-            raise TypeError("binoutputfile must be a Boolean.")
-        if self.binoutputfile:
-            raise NotImplementedError()
+        self.radius = min(kwargs.get('r_max', 1e10), self.hdr.rout)
+        self.minScale = max(kwargs.get('r_min', 0.), self.hdr.rin)
+        if self.minScale >= self.radius:
+            raise ValueError('radius < minScale')
 
-        if type(gridfile) is bool:
-            self.gridfile = gridfile
-        else:
-            raise TypeError("gridfile must be a Boolean.")
-
-        if type(returnnoise) is bool:
-            self.returnnoise = returnnoise
-        else:
-            raise TypeError("returnnoise must be a Boolean.")
-
-        if type(nmodels) is int:
-            self.nmodels = nmodels
-        elif type(nmodels) is float:
-            self.nmodels = int(nmodels)
-        else:
-            raise TypeError('nmodels must be an integer.')
-
-        if (coordsys == 'cylindrical' or coordsys == 'polar'):
-            self.coordsys = coordsys
-        else:
-            raise NotImplementedError("Only cylindrical or polar coordinates.")
-
-        # Chemical model properties from header file. This automatically reads
-        # in the number of dimensions (by counting c1arr, c2arr and c3arr),
-        # the number of cells and the minimum and maximum radii.
-
-        if type(headerfile) is str:
-            self.hdr = header.headerFile('../'+headerfile, coordsys=self.coordsys)
-        else:
-            raise TypeError('headerfile must be a path.')
-        self.ndim = self.hdr.ndim
-        self.ncells = self.hdr.ncells
-        self.rin = self.hdr.rin
-        self.rout = self.hdr.rout
-
-        # If there is a central concentration, i.e. rin is 0, then we must limit
-        # the minimum scale.
-        # If inner and outer radii are specifically supplied, we will
-        # overwrite those read from the header file.
-
-        if r_inner is not None:
-            self.rin = max(self.rin, r_inner)
-        if r_outer is not None:
-            self.rout = min(self.rout, r_outer)
-        if self.rin >= self.rout:
-            raise ValueError("Outer radius less than inner radius.")
-
-        # Additional model properties, if None specified, check if provided by
-        # the chemical header, otherwise, revert to default value (=None).
-
-        self.dens = self.checkTypes(dens, 'dens', [str])
-        self.abund = self.checkTypes(abund, 'abund', [str, float])
-        self.temp = self.checkTypes(temp, 'temp', [str])
-        self.dtemp = self.checkTypes(dtemp, 'dtemp', [str, float, None])
-        self.g2d = self.checkTypes(g2d, 'gastodust', [str, float, None])
-        self.doppler = self.checkTypes(doppler, 'doppler', [str, float, None])
-
-        # The doppler type defines whether the microturbulence is specified in
-        # meters per second, 'absolute', or a fraction of the local sound
-        # speed, 'mach'.
-
-        if (dopplertype == 'absolute' or dopplertype == 'mach'):
-            self.dopplertype = dopplertype
-        else:
-            raise ValueError("dopplertype must be 'absolute' or 'mach'.")
-
-        # The stellar mass is required for the Keplerian rotation.
-        # TODO: Allow the inclusion of an array of velocity profiles.
-
-        if type(stellarmass) is float:
-            self.stellarmass = stellarmass
-        else:
-            raise TypeError("stellarmass must be a float.")
-
-        # Number of grid points for lime. pIntensity should be greater than
-        # sinkPoints but not required.
-
-        if type(pIntensity) is float:
-            self.pIntensity = pIntensity
-        else:
-            raise TypeError("pIntensity must be a float.")
-        if type(sinkPoints) is float:
-            self.sinkPoints = sinkPoints
-        else:
-            raise TypeError("sinkPoints must be a float.")
+        self.pIntensity = float(kwargs.get('pIntensity', 1e5))
+        self.sinkPoints = float(kwargs.get('sinkPoints', 3e3))
         if self.sinkPoints > self.pIntensity:
             print "Warning: sinkPoints > pIntensity."
 
-        # Sampling as in the lim manual. sampling = 2 is spherical.
+        self.sampling = int(kwargs.get('sampling', 2))
+        if self.sampling not in [0, 1, 2]:
+            raise ValueError('sampling must be 0, 1 or 2.')
 
-        if (type(sampling) is int and sampling < 3):
-            self.sampling = sampling
-        else:
-            raise ValueError("sampling must be 0, 1 or 2.")
+        self.tcmb = float(kwargs.get('tcmb', None))
+        self.moldatfile = self.verifymoldatfile(moldatfile)
 
-        if (type(lte_only) is int and lte_only < 2):
-            self.lte_only = lte_only
-        elif type(lte_only) is bool:
-            self.lte_only = int(lte_only)
-        else:
-            raise ValueError("lte_only must be True or False.")
-        if not self.lte_only:
+        self.dust = kwargs.get('dust', 'jena_thin_e6.tab')
+        if not self.checkexistance(self.dust, self.auxfiles):
+            raise ValueError('%s not found.' % self.dust)
+
+        # Options to turn on the generation of additional output files.
+        # These are only booleans as the filenames are automatic.
+
+        self.returnoputs = kwargs.get('outputfile', False)
+        self.returnbputs = kwargs.get('binoutputfile', False)
+        self.returngrids = kwargs.get('gridfile', False)
+
+        self.retstart = kwargs.get('restart', None)
+        if self.restart is not None:
+            raise NotImplementedError()
+
+        self.pregrid = kwargs.get('pregrid', None)
+        if self.pregrid is not None:
+            raise NotImplementedError()
+
+        self.lte_only = int(kwargs.get('lte_only', 1))
+        if self.lte_only > 1:
+            raise ValueError('lte_only must be 0 or 1.')
+        elif self.lte_only == 0:
             print 'Warning: Running non-LTE model. Will be slow.'
 
-        # Imaging parameters.
-        # Make sure the appropriate variables are lists.
+        self.blend = int(kwargs.get('blend', 0))
+        if self.blend > 1:
+            raise ValueError('blend must be 0 or 1.')
 
-        if type(transitions) is not list:
-            self.transitions = [transitions]
-        else:
-            self.transitions = transitions
-
-        # Must we specfiy the (inc, pa, azi) triplet.
-        # Due to the old code style, these are theta and phi.
-        # TODO: Include azimuthal values, but this is not necessary for
-        # azimuthally symmetric models.
-
-        if type(inclinations) is not list:
-            self.thetas = [inclinations]
-        else:
-            self.thetas = inclinations
-
-        if type(positionangles) is not list:
-            self.phis = [positionangles]
-        else:
-            self.phis = positionangles
-
-        # TODO: Include possibiliy of lists of values.
-        self.azimuth = 0.0
-
-        # Specify the spectral axis in meters per second.
-        # TODO: Allow for a spectral scan.
-
-        if (type(nchan) is float or type(nchan) is int):
-            self.nchan = float(nchan)
-        else:
-            raise TypeError("nchan must be a number.")
-
-        if (type(velres) is float or type(velres) is int):
-            self.velres = float(velres)
-        else:
-            raise TypeError("velres must be a number.")
-
-        if (type(antialias) is float or type(antialias) is int):
-            self.antialias = int(antialias)
-        else:
-            raise TypeError("antialias must be a number")
+        self.antialias = int(kwargs.get('antialias', 1))
         if self.antialias > 4:
-            print "Warning: High antialias value of %d." % self.antialias
-            print "\t Ray tracing may be slow..."
+            print "Warning: Large antialias value."
 
-        # Specify the field of view. Will complain if the model is not fully
-        # imaged with the specified image axes.
+        self.polarization = kwargs.get('polarization', None)
+        if self.polarization is not None:
+            raise NotImplementedError()
 
-        if type(imgres) is float:
-            self.imgres = imgres
-        else:
-            raise TypeError("imgres must be a float.")
+        self.collPartIds = kwargs.get('collPartIds', None)
+        if self.collPartIds is not None:
+            raise NotImplementedError('Use instead opr_cp.')
 
-        if type(distance) is float:
-            self.distance = distance
-        else:
-            raise TypeError('distance must be a float.')
+        self.nMolWeights = kwargs.get('nMolWeights', None)
+        if self.nMolWeights is not None:
+            raise NotImplementedError('Use instead opr_cp.')
 
-        if (type(pxls) is int or type(pxls) is float):
-            self.pxls = int(pxls)
-        else:
-            raise TypeError('pxls must be a number.')
+        self.dustWeights = kwargs.get('dustWeights', None)
+        if self.dustWeights is not None:
+            raise NotImplementedError('Use instead noDust.')
+
+        self.traceRayAlgorithm = int(kwargs.get('traceRayAlgorithm', 1))
+        if self.traceRayAlgorithm > 1:
+            raise ValueError('traceRayAlgorithm must be 0 or 1.')
+
+        self.nThreads = int(kwargs.get('nThreads', 20))
+
+        # LIME imaging parameters, read the manual for more info.
+        # https://lime.readthedocs.io/en/latest/usermanual.html#images
+
+        self.pxls = int(kwargs.get('pxls', 128))
+        self.imgres = float(kwargs.get('imgres', 0.065))
+        self.distance = float(kwargs.get('distance', 59.))
+        self.unit = int(kwargs.get('unit', 1))
+
+        if self.unit not in [0, 1, 2, 3]:
+            raise ValueError("unit must be 0, 1, 2 or 3.")
+
+        self.name = kwargs.get('filename', self.header[:-2])
+        if self.name[-5:] == '.fits':
+            self.name = self.name[:-5]
+
+        self.source_vel = float(kwargs.get('source_vel', 0.0))
+        self.source_vel *= 1e3
+
+        self.nchan = int(kwargs.get('nchan', 100))
+        self.velres = float(kwargs.get('velres', 50.))
+
+        self.transitions = kwargs.get('transitions', [0])
+        if type(self.transitions) is not list:
+            self.transitions = [self.transitions]
+
+        self.molI = kwargs.get('molI', None)
+        if self.molI is not None:
+            raise NotImplementedError()
+
+        self.freq = kwargs.get('freq', None)
+        if self.freq is not None:
+            raise NotImplementedError()
+
+        self.bandwidth = kwargs.get('bandwidth', None)
+        if self.bandwidth is not None:
+            raise NotImplementedError()
+
+        # LIME image rotation parameters.
+        # https://lime.readthedocs.io/en/latest/usermanual.html#image-rotation-parameters
+
+        self.incl = kwargs.get('incl', [0])
+        if type(self.incl) is not list:
+            self.incl = [self.incl]
+
+        self.posang = kwargs.get('posang', [0])
+        if type(self.posang) is not list:
+            self.posang = [self.posang]
+        self.posang = [pa - np.radians(90.) for pa in self.posang]
+
+        self.azimuth = kwargs.get('azimuth', [0])
+        if type(self.azimuth) is not list:
+            self.azimuth = [self.azimuth]
+
+        # LIME model functions.
+        # https://lime.readthedocs.io/en/latest/usermanual.html#model-functions
+        # Read https://github.com/richteague/makeLime/blob/master/README.md
+        # for details on the format of some of these.
+        # TODO: Include non-Keplerian rotation.
+
+        self.dens = kwargs.get('dens', 'dens')
+        self.abund = kwargs.get('abund', 'abund')
+        self.temp = kwargs.get('temp', 'temp')
+        self.dtemp = kwargs.get('dtemp', None)
+
+        self.checkTypes(self.dens, [str])
+        self.checkTypes(self.abund, [str, float])
+        self.checkTypes(self.temp, [str])
+        self.checkTypes(self.dtemp, [str, float, None])
+
+        self.doppler = kwargs.get('doppler', 50.)
+        self.dopplertype = kwargs.get('dopplertype', 'absolute')
+        self.checkTypes(self.doppler, [str, float])
+        if not (self.dopplertype == 'absolute' or self.dopplertype == 'mach'):
+            raise ValueError("dopplertype must be 'absolute' or 'mach'.")
+
+        self.stellarmass = float(kwargs.get('stellarmass', 0.7))
+
+        self.magfield = kwargs.get('magfield', None)
+        if self.magfield is not None:
+            raise NotImplementedError()
+
+        self.g2d = kwargs.get('g2d', None)
+        self.checkTypes(self.g2d, [str, float, None])
+
+        self.gridDensity = kwargs.get('gridDensity', None)
+        if self.gridDensity is not None:
+            raise NotImplementedError()
+
+        # makeLIME specific variables.
+        # https://github.com/richteague/makeLime/blob/master/README.md
+
+        self.ndim = self.hdr.ndim
+        self.ncells = self.hdr.ncells
+        self.nmodels = int(kwargs.get('nmodels', 1))
+        self.returnnoise = kwargs.get('returnnoise', False)
+
+        self.ninc = len(self.incl)
+        self.npos = len(self.posang)
+        self.nazi = len(self.azimuth)
+        self.ntra = len(self.transitions)
+
+        # Check the field of view of the model. Raise a warning if this
+        # is not enough to image the whole model.
 
         if (self.distance * self.imgres * self.pxls * 0.5 < self.rout):
             proj_dist = self.imgres * self.distance * self.pxls
@@ -282,89 +209,45 @@ class model:
             print "\t Image has projected distance of %.2f au," % proj_dist
             print "\t but the model has a size of %.2f au." % proj_size
 
-        if (type(unit) is int and unit in [0, 1, 2, 3]):
-            self.unit = unit
-        else:
-            raise ValueError("unit must be 0, 1, 2 or 3.")
+        # opr_cp is the ortho / para ratio of the collision partner.
+        # If no ratio is specified but no H2 rates are provided, assume 3.
+        # If a ratio is specified but both oH2 and pH2 are not, revert to H2.
+        # This will only make a difference with non-LTE models.
 
-        if not (blend == 0 or blend == 1):
-            self.blend = 0
-            print 'Warning: Unknown blend value. Set to 0.'
-        else:
-            self.blend = blend
-        if self.blend:
-            print 'Warning: Line blending on, will be slow.'
-
-        # Coillision partners and ortho- / para- ratios.
-        # By default, assume H2. If opr_cp is set, rescale 'dens' to
-        # ortho-H2 and para-H2.
-
-        ratefile = rates.ratefile(moldatfile)
-
-        if 'H2' in ratefile.partners:
-            H2_rates = True
-        else:
-            H2_rates = False
-
-        if 'oH2' in ratefile.partners:
-            oH2_rates = True
-        else:
-            oH2_rates = False
-
-        if 'pH2' in ratefile.partners:
-            pH2_rates = True
-        else:
-            pH2_rates = False
-
-        if not (opr_cp > 0. or opr_cp is None):
-            raise ValueError("opr_cp must be positive or None.")
-        if (not H2_rates and not oH2_rates and not pH2_rates):
-            raise ValueError("No appropriate collisonal rates found.")
-
-        if (opr_cp is None and not H2_rates):
-            if not self.lte_only:
-                print 'Warning: No H2 collider density rates found.'
-                print '\t Assuming oH2 / pH2 ratio of 3.'
+        self.opr_cp = kwargs.get('opr_cp', None)
+        if (self.opr_cp is None and not self.H2):
+            print 'Warning: No H2 collider density rates found.'
+            print '\t Assuming oH2 / pH2 ratio of 3.'
             self.opr_cp = 3.
-        elif (type(opr_cp) is float and not oH2_rates and not pH2_rates):
-            if not self.lte_only:
-                print 'Warning: No ortho-H2 or para-H2 rates found.'
-                print '\t Assuming total H2 rates.'
-            self.opr_co = None
-        else:
-            self.opr_cp = opr_cp
+        elif (self.opr_cp is not None and not self.oH2 and not self.pH2):
+            print 'Warning: No ortho-H2 or para-H2 rates found.'
+            print '\t Assuming total H2 rates.'
+            self.opr_cp = None
 
-        # Include a depletion factor for the molecule.
-        # This allows for isotopologues to be included, for example.
+        # Additional variables. See readme for info.
 
-        if type(depletion) is float:
-            self.rescale_abund = depletion
-        else:
-            raise TypeError("depletion must be a float.")
+        self.depletion = float(kwargs.get('depletion', 1.0))
+        self.oversample = int(kwargs.get('oversample', 1))
+        self.includeDust = int(kwargs.get('includeDust', 1))
 
         return
 
-    def checkTypes(self, inval, default, types):
-        if inval is None:
-            if default in self.hdr.arrnames:
-                return default
-            elif None in types:
-                return inval
-            else:
-                raise TypeError("No %s in %s." % (default, self.hdr.fn))
-        elif type(inval) in types:
-            return inval
-        else:
-            raise TypeError("%s" % self.typestostring(types))
+    def checkTypes(self, val, types):
+        """Check the array names are valid."""
+        if not type(val) in types:
+            raise TypeError('{} {}.'.format(val, self.typestr(types)))
+        elif (type(val) is str and val not in self.hdr.arrnames):
+            raise ValueError('{} not found in {}'.format(val, self.hdr.fn))
         return
 
-    def typestostring(self, types):
+    def typestr(self, types):
+        """Format a string for output."""
         if len(types) == 1:
-            string = 'Must be a '
+            string = 'should be a '
         elif len(types) == 2:
-            string = 'Must be either '
+            string = 'should be either '
         else:
-            string = 'Must be one of: '
+            string = 'should be one of: '
         for i, t in enumerate(types):
             try:
                 string += '%s' % t.__name__
@@ -377,3 +260,19 @@ class model:
             else:
                 string += '.'
         return string
+
+    def checkexistance(self, fn, folder):
+        """Check if fn is in the specified folder."""
+        return os.path.isfile(folder + fn)
+
+    def verifymoldatfile(self, moldatfile):
+        """Verify the collisional rates exist."""
+        if not self.checkexistance(moldatfile, self.auxfiles):
+            raise ValueError('%s not found.' % moldatfile)
+        ratefile = rates.ratefile(self.moldatfile)
+        self.H2 = 'H2' in ratefile.partners
+        self.oH2 = 'oH2' in ratefile.partners
+        self.pH2 = 'pH2' in ratefile.partners
+        if (not self.H2 and not self.oH2 and not self.pH2):
+            raise ValueError('No appropriate collisonal rates found.')
+        return moldatfile

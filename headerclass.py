@@ -13,8 +13,7 @@ class headerFile:
             raise NotImplementedError("Only 'cyclindrical' or 'polar'.")
         self.fn = filename
         if self.fn[-2:] != '.h':
-            self.fn += '.h'
-
+            raise ValueError('headerfile must have a *.h extention.')
         # Read in the header.
 
         with open(self.fn) as f:
