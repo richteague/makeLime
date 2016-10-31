@@ -29,26 +29,26 @@ def resampleVelocities(model):
 def moveModels(model, prefix='0_', suffix=''):
     """Move the finished models to appropriate end directory."""
     files = [fn for fn in os.listdir('./') if fn.endswith('%s.fits' % suffix)]
-    for fn in [fn for fn in files if fn.beginswith(prefix)]:
+    for fn in [fn for fn in files if fn.startswith(prefix)]:
         os.system('mv %s %s%s' % (fn, model.directory, model.name+fn[1:]))
     return
 
 
 def averageModels(model):
     """Average over all the models and save to 0_*.fits."""
-    if model.nmodels == 1:
-        return
     for i in model.incl:
         for p in model.posang:
             for a in model.azimuth:
                 for t in model.transitions:
                     fn = fmt_fn(0, i, p, a, t)
-                    hdu = fits.open(fn)
-                    avg = [fits.getdata(fmt_fn(m, i, p, a, t))
-                           for m in range(model.nmodels)]
-                    getNoise(avg, i, p, a, t, model)
-                    hdu[0].data = np.average(avg, axis=0)
-                    hdu.writeto(fn, clobber=True)
+                    if model.nmodels > 1:
+                        hdu = fits.open(fn)
+                        avg = [fits.getdata(fmt_fn(m, i, p, a, t))
+                            for m in range(model.nmodels)]
+                        getNoise(avg, i, p, a, t, model)
+                        hdu[0].data = np.average(avg, axis=0)
+                        hdu.writeto(fn, clobber=True)
+                    writeFitsHeader(fn, model, i, p, a)
     return
 
 
@@ -56,7 +56,7 @@ def writeFitsHeader(filename, model, inc, pa, azi):
     """Include model data in the final .fits file header."""
     data, header = fits.getdata(filename, header=True)
     header['DISTANCE'] = model.distance, 'Distance in parsec.'
-    header['CHEMMOD'] = model.hdr.fn.split('/')[-1], 'Chemical model used.'
+    header['CHEMMOD'] = model.header.fn.split('/')[-1], 'Chemical model used.'
     header['INC'] = inc, 'Inclianation in radians.'
     header['PA'] = pa, 'Position angle in radians.'
     header['AZI'] = azi, 'Azimuthal angle in radians.'
@@ -75,7 +75,7 @@ def writeFitsHeader(filename, model, inc, pa, azi):
 
 def getNoise(avgmodels, i, p, a, t, model):
     """Estimate the MCMC noise from the model ensemble."""
-    if (model.nmodel == 1 or not model.returnnoise):
+    if (model.nmodels == 1 or not model.returnnoise):
         return
     noise = np.std(avgmodels, axis=0)
     hdu = fits.open(fmt_fn(1, i, p, a, t))
@@ -86,7 +86,7 @@ def getNoise(avgmodels, i, p, a, t, model):
 
 def combinePopfiles(model):
     """Combine the population files from the model ensemble."""
-    if not model.outputfile:
+    if not model.returnoputs:
         return
     outputfile = np.vstack([np.loadtxt('outputfile_%d.out' % m)
                             for m in range(model.nmodels)]).T
@@ -95,15 +95,15 @@ def combinePopfiles(model):
     return
 
 
-def combineBinPopFiles(model):
+def combineBinpopfiles(model):
     """Combine the binary population files from the model ensemble."""
-    if model.binoutputfile:
+    if model.returnbputs:
         raise NotImplementedError()
     return
 
 
 def combineGridfiles(model):
     """Move the grid files."""
-    if model.gridfile:
+    if model.returngrids:
         os.system('mv gridfile*.out %s' % model.directory)
     return

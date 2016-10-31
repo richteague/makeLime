@@ -11,12 +11,14 @@ class headerFile:
             self.coordsys = coordsys
         else:
             raise NotImplementedError("Only 'cyclindrical' or 'polar'.")
-        self.fn = filename
+    
+        self.path = filename.split('/')[0] + '/'
+        self.fn = filename.split('/')[-1]
         if self.fn[-2:] != '.h':
             raise ValueError('headerfile must have a *.h extention.')
-        # Read in the header.
 
-        with open(self.fn) as f:
+        # Read in the header.
+        with open(self.path+self.fn) as f:
             self.hdr = f.readlines()
         self.ncells = self.parsencells()
         self.arrnames = [self.parsename(ln) for ln in self.hdr]

@@ -31,6 +31,7 @@ def run(headerfile, moldatfile, **kwargs):
     """ Run a LIME model. Check readme for possible kwargs and defaults."""
 
     # Start the clock to time the running of models.
+    print '\n'
     waittime = kwargs.get('wait', 10.)
     t0 = time.time()
 
@@ -40,13 +41,13 @@ def run(headerfile, moldatfile, **kwargs):
 
     # Generate a LIME model class instance.
     model = lime.model(headerfile, moldatfile, **kwargs)
-    print 'Input is in %dD-%s coordinates.' % (model.ndim, model.coordsys)
+    print '\nInput is in %dD-%s coordinates.' % (model.ndim, model.coordsys)
     print 'Assuming a value of minScale = %.2f au.' % model.minScale
     print 'Assuming a value of radius = %.2f au.' % model.radius
 
     # Copy the appropriate files into the working directory.
     path = os.path.dirname(__file__) + '/AuxFiles'
-    os.system('cp ../%s .' % model.header)
+    os.system('cp ../%s .' % model.header.fn)
     os.system('cp %s/%s .' % (path, model.moldatfile))
     os.system('cp %s/%s .' % (path, model.dust))
 
@@ -98,9 +99,9 @@ def run(headerfile, moldatfile, **kwargs):
     comb.averageModels(model)
     comb.moveModels(model)
     comb.moveModels(model, suffix='_noise')
-    make.combineGridfiles(model)
-    make.combinePopfiles(model)
-    make.combineBinPopFiles(model)
+    comb.combineGridfiles(model)
+    comb.combinePopfiles(model)
+    comb.combineBinpopfiles(model)
 
     # Clean up.
     os.chdir('../')

@@ -26,8 +26,8 @@ class model:
             raise ValueError('%s not found.' % headerfile)
         self.header = header.headerFile('../' + headerfile)
 
-        self.radius = min(kwargs.get('r_max', 1e10), self.hdr.rout)
-        self.minScale = max(kwargs.get('r_min', 0.), self.hdr.rin)
+        self.radius = min(kwargs.get('r_max', 1e10), self.header.rout)
+        self.minScale = max(kwargs.get('r_min', 0.), self.header.rin)
         if self.minScale >= self.radius:
             raise ValueError('radius < minScale')
 
@@ -40,7 +40,7 @@ class model:
         if self.sampling not in [0, 1, 2]:
             raise ValueError('sampling must be 0, 1 or 2.')
 
-        self.tcmb = float(kwargs.get('tcmb', None))
+        self.tcmb = float(kwargs.get('tcmb', 2.725))
         self.moldatfile = self.verifymoldatfile(moldatfile)
 
         self.dust = kwargs.get('dust', 'jena_thin_e6.tab')
@@ -54,7 +54,7 @@ class model:
         self.returnbputs = kwargs.get('binoutputfile', False)
         self.returngrids = kwargs.get('gridfile', False)
 
-        self.retstart = kwargs.get('restart', None)
+        self.restart = kwargs.get('restart', None)
         if self.restart is not None:
             raise NotImplementedError()
 
@@ -92,7 +92,7 @@ class model:
         if self.dustWeights is not None:
             raise NotImplementedError('Use instead noDust.')
 
-        self.traceRayAlgorithm = int(kwargs.get('traceRayAlgorithm', 1))
+        self.traceRayAlgorithm = int(kwargs.get('traceRayAlgorithm', 0))
         if self.traceRayAlgorithm > 1:
             raise ValueError('traceRayAlgorithm must be 0 or 1.')
 
@@ -109,9 +109,13 @@ class model:
         if self.unit not in [0, 1, 2, 3]:
             raise ValueError("unit must be 0, 1, 2 or 3.")
 
-        self.name = kwargs.get('filename', self.header[:-2])
-        if self.name[-5:] == '.fits':
-            self.name = self.name[:-5]
+        # We want to remove any directory before the filename, 
+        # and make sure that there's no extension on the end.
+
+        self.name = kwargs.get('filename', self.header.fn[:-2])
+        self.name = self.name.split('/')[-1]
+        if '.' in self.name:
+            self.name = ''.join(self.name.split('.')[:-1])
 
         self.source_vel = float(kwargs.get('source_vel', 0.0))
         self.source_vel *= 1e3
@@ -145,7 +149,6 @@ class model:
         self.posang = kwargs.get('posang', [0])
         if type(self.posang) is not list:
             self.posang = [self.posang]
-        self.posang = [pa - np.radians(90.) for pa in self.posang]
 
         self.azimuth = kwargs.get('azimuth', [0])
         if type(self.azimuth) is not list:
@@ -189,10 +192,11 @@ class model:
         # makeLIME specific variables.
         # https://github.com/richteague/makeLime/blob/master/README.md
 
-        self.ndim = self.hdr.ndim
-        self.ncells = self.hdr.ncells
+        self.ndim = self.header.ndim
+        self.ncells = self.header.ncells
         self.nmodels = int(kwargs.get('nmodels', 1))
         self.returnnoise = kwargs.get('returnnoise', False)
+        self.coordsys = self.header.coordsys
 
         self.ninc = len(self.incl)
         self.npos = len(self.posang)
@@ -202,9 +206,9 @@ class model:
         # Check the field of view of the model. Raise a warning if this
         # is not enough to image the whole model.
 
-        if (self.distance * self.imgres * self.pxls * 0.5 < self.rout):
+        if (self.distance * self.imgres * self.pxls * 0.5 < self.radius):
             proj_dist = self.imgres * self.distance * self.pxls
-            proj_size = 2. * self.rout
+            proj_size = 2. * self.radius
             print "Warning: Check distance and pixel scaling."
             print "\t Image has projected distance of %.2f au," % proj_dist
             print "\t but the model has a size of %.2f au." % proj_size
@@ -232,25 +236,28 @@ class model:
 
         return
 
+
     def checkTypes(self, val, types):
         """Check the array names are valid."""
-        if not type(val) in types:
-            raise TypeError('{} {}.'.format(val, self.typestr(types)))
-        elif (type(val) is str and val not in self.hdr.arrnames):
-            raise ValueError('{} not found in {}'.format(val, self.hdr.fn))
+        if not (type(val) in types or val in types):
+            raise TypeError(self.typestr(val, types))
+        elif (type(val) is str and val not in self.header.arrnames):
+            raise ValueError('{} not found in {}'.format(val, self.header.fn))
         return
 
-    def typestr(self, types):
+
+    def typestr(self, val, types):
         """Format a string for output."""
+        string = '{} should be '.format(val)
         if len(types) == 1:
-            string = 'should be a '
+            string += 'a '
         elif len(types) == 2:
-            string = 'should be either '
+            string += 'either '
         else:
-            string = 'should be one of: '
+            string += 'one of: '
         for i, t in enumerate(types):
             try:
-                string += '%s' % t.__name__
+                string += '{}'.format(t.__name__)
             except:
                 string += 'None'
             if i < len(types) - 2:
@@ -261,15 +268,17 @@ class model:
                 string += '.'
         return string
 
+
     def checkexistance(self, fn, folder):
         """Check if fn is in the specified folder."""
         return os.path.isfile(folder + fn)
+
 
     def verifymoldatfile(self, moldatfile):
         """Verify the collisional rates exist."""
         if not self.checkexistance(moldatfile, self.auxfiles):
             raise ValueError('%s not found.' % moldatfile)
-        ratefile = rates.ratefile(self.moldatfile)
+        ratefile = rates.ratefile(self.auxfiles + moldatfile)
         self.H2 = 'H2' in ratefile.partners
         self.oH2 = 'oH2' in ratefile.partners
         self.pH2 = 'pH2' in ratefile.partners

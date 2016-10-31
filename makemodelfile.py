@@ -10,7 +10,7 @@ def makeFile(m, model):
     # Include the headers.
     tempfile = ['#include "lime.h"\n', '#include "math.h"\n',
                 '#include "stdio.h"\n', '#include "stdlib.h"\n']
-    tempfile.append('#include "%s"\n\n' % model.hdr.fn.split('/')[-1])
+    tempfile.append('#include "%s"\n\n' % model.header.fn.split('/')[-1])
 
     # Include the imaging parameters.
     writeImageParameters(tempfile, m, model)
@@ -45,10 +45,7 @@ def writeImageParameters(temp, m, model):
     temp.append('\tpar->pIntensity = %.d;\n' % model.pIntensity)
     temp.append('\tpar->sinkPoints = %.d;\n' % model.sinkPoints)
     temp.append('\tpar->sampling = %d;\n' % model.sampling)
-
-    if model.tcmb is not None:
-        temp.append('\tpar->tcmb = %.5f;\n' % model.tcbm)
-
+    temp.append('\tpar->tcmb = %.5f;\n' % model.tcmb)
     temp.append('\tpar->moldatfile[0] = "%s";\n' % model.moldatfile)
     temp.append('\tpar->dust = "%s";\n' % model.dust)
 
@@ -92,7 +89,7 @@ def dust_weighting(temp, model):
     If dust is included, assume equal weighting. TODO: EXPERIMENTAL."""
     temp.append('\tpar->dustWeights[0] = %.1f;\n' % model.includeDust)
     if model.opr_cp is not None:
-        temp.append('\tpar->dustWeights[1] = $.1f;\n' % model.includeDust)
+        temp.append('\tpar->dustWeights[1] = %.1f;\n' % model.includeDust)
     return
 
 
@@ -135,13 +132,13 @@ def writeImageBlock(temp, nimg, m, inc, pa, azi, trans, model):
     temp.append(imgs+'distance = %.3f*PC;\n' % model.distance)
     temp.append(imgs+'unit = %d;\n' % model.unit)
     temp.append(imgs+'filename = "%s.fits";\n' % filename)
-    temp.append(imgs+'.source_vel = %.3;\n' % model.source_vel)
-    temp.append(imgs+'.nchan = %d;\n' % (model.nchan * model.oversample))
-    temp.append(imgs+'.velres = %.3f;\n' % (model.velres / model.oversample))
-    temp.append(imgs+'.trans = %d;\n' % trans)
-    temp.append(imgs+'.incl = %.3f;\n' % inc)
-    temp.append(imgs+'.posang = %.3f;\n' % pa)
-    temp.append(imgs+'.azimuth = %.3f;\n\n' % azi)
+    temp.append(imgs+'source_vel = %.3f;\n' % model.source_vel)
+    temp.append(imgs+'nchan = %d;\n' % (model.nchan * model.oversample))
+    temp.append(imgs+'velres = %.3f;\n' % (model.velres / model.oversample))
+    temp.append(imgs+'trans = %d;\n' % trans)
+    temp.append(imgs+'incl = %.3f;\n' % inc)
+    temp.append(imgs+'posang = %.3f;\n' % (pa-1.57))
+    temp.append(imgs+'azimuth = %.3f;\n\n' % azi)
     return
 
 
@@ -297,7 +294,7 @@ def writeDustTemperature(temp, model):
         temp.append('%.3f * temperature[0];\n' % model.dtemp)
         temp.append('\tif (temperature[1] < 2.73)')
         temp.append('{temperature[1] = 2.73;}\n')
-    else:
+    elif model.dtemp is not None:
         temp.append('\ttemperature[1] = ')
         temp.append('findvalue(c1, c2, c3, %s);\n' % model.dtemp)
         temp.append('\tif (temperature[1] < 2.73) ')
