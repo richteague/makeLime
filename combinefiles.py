@@ -61,8 +61,6 @@ def writeFitsHeader(filename, model, inc, pa, azi):
     header['PA'] = pa, 'Position angle in radians.'
     header['AZI'] = azi, 'Azimuthal angle in radians.'
     header['NMODELS'] = model.nmodels, 'Number of models averaged.'
-    if model.opr_cp is not None:
-        header['H2_OPR'] = model.opr_cp, 'H2 ortho to para ratio.'
 
     # Include the change for over-sampled velocity axis.
 
@@ -91,7 +89,7 @@ def combinePopfiles(model):
     outputfile = np.vstack([np.loadtxt('outputfile_%d.out' % m)
                             for m in range(model.nmodels)]).T
     outputfile[:3] /= sc.au
-    np.save('%s%s_popfile.out' % (model.directory, model.name), outputfile)
+    np.save('%s%s_popfile' % (model.directory, model.name), outputfile)
     return
 
 

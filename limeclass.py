@@ -80,18 +80,27 @@ class model:
         if self.polarization is not None:
             raise NotImplementedError()
 
-        self.collPartIds = kwargs.get('collPartIds', None)
-        if self.collPartIds is not None:
-            raise NotImplementedError('Use instead opr_cp.')
+        # If oH2 and pH2 are available collision partners, use them over H2.
+        # If no ortho / para ratio is given, assume a value of 3.
+        # self.opr is then the n(H2) -> [n(oH2), n(pH2)] rescaling value.
 
-        self.nMolWeights = kwargs.get('nMolWeights', None)
-        if self.nMolWeights is not None:
-            raise NotImplementedError('Use instead opr_cp.')
+        if (self.oH2 and self.pH2):
+            print 'Using oH2 and pH2 as collision partners.'
+            self.opr = kwargs.get('opr', 3.)
+            self.opr = np.array([self.opr, 1.]) / (1. + self.opr)
+            self.collpartIds = [3, 2]
+        else:
+            print 'Using H2 as single collision partner.'
+            self.opr = [1.0]
+            self.collpartIds = [1]
 
-        self.dustWeights = kwargs.get('dustWeights', None)
-        if self.dustWeights is not None:
-            raise NotImplementedError('Use instead noDust.')
+        # We then set the molecular and dust weights. Assume that they're
+        # equally distributed between them.
 
+        self.nMolWeights = np.array([1.0 for cId in self.collpartIds])
+        self.dustWeights = np.array([1.0 for cId in self.collpartIds])
+      
+ 
         self.traceRayAlgorithm = int(kwargs.get('traceRayAlgorithm', 0))
         if self.traceRayAlgorithm > 1:
             raise ValueError('traceRayAlgorithm must be 0 or 1.')
@@ -112,7 +121,7 @@ class model:
         # We want to remove any directory before the filename, 
         # and make sure that there's no extension on the end.
 
-        self.name = kwargs.get('filename', self.header.fn[:-2])
+        self.name = kwargs.get('name', self.header.fn[:-2])
         self.name = self.name.split('/')[-1]
         if '.' in self.name:
             self.name = ''.join(self.name.split('.')[:-1])
@@ -126,6 +135,8 @@ class model:
         self.transitions = kwargs.get('transitions', [0])
         if type(self.transitions) is not list:
             self.transitions = [self.transitions]
+
+        # Need to include more than one molecule at a time.
 
         self.molI = kwargs.get('molI', None)
         if self.molI is not None:
@@ -213,27 +224,22 @@ class model:
             print "\t Image has projected distance of %.2f au," % proj_dist
             print "\t but the model has a size of %.2f au." % proj_size
 
-        # opr_cp is the ortho / para ratio of the collision partner.
-        # If no ratio is specified but no H2 rates are provided, assume 3.
-        # If a ratio is specified but both oH2 and pH2 are not, revert to H2.
-        # This will only make a difference with non-LTE models.
-
-        self.opr_cp = kwargs.get('opr_cp', None)
-        if (self.opr_cp is None and not self.H2):
-            print 'Warning: No H2 collider density rates found.'
-            print '\t Assuming oH2 / pH2 ratio of 3.'
-            self.opr_cp = 3.
-        elif (self.opr_cp is not None and not self.oH2 and not self.pH2):
-            print 'Warning: No ortho-H2 or para-H2 rates found.'
-            print '\t Assuming total H2 rates.'
-            self.opr_cp = None
-
         # Additional variables. See readme for info.
 
         self.depletion = float(kwargs.get('depletion', 1.0))
         self.oversample = int(kwargs.get('oversample', 1))
-        self.includeDust = int(kwargs.get('includeDust', 1))
 
+        # If there is no dust, include a dummy density.
+        # an opr = 0 (thus we rescale the density to zero).
+        # Make this MolWeight = 0 and dustWeight = 1, but remove
+        # all other dustweights.
+
+        if not int(kwargs.get('includeContinuum', True)):
+            self.opr = np.append(self.opr, 0.)
+            self.collpartIds = np.append(self.collpartIds, 4)
+            self.nMolWeights = np.append(self.nMolWeights, 0.)
+            self.dustWeights = np.append(self.dustWeights * 0., 1.)
+            self.dtemp = 0.0
         return
 
 

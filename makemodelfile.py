@@ -51,13 +51,13 @@ def writeImageParameters(temp, m, model):
 
     if model.returnoputs:
         s = 'outputfile_%d.out' % (m)
-        temp.append('\tpar->outputfile = %s;\n' % s)
+        temp.append('\tpar->outputfile = "%s";\n' % s)
     if model.returnbputs:
         s = 'binoutputfile_%d.out' % (m)
-        temp.append('\tpar->binoutputfile = %s;\n' % s)
+        temp.append('\tpar->binoutputfile = "%s";\n' % s)
     if model.returngrids:
         s = 'gridfile_s%s_%d.out' % (model.name, m)
-        temp.append('\tpar->gridfile = %s;\n' % s)
+        temp.append('\tpar->gridfile = "%s";\n' % s)
 
     temp.append('\tpar->lte_only = %d;\n' % model.lte_only)
     temp.append('\tpar->blend = %d;\n' % model.blend)
@@ -85,35 +85,24 @@ def writeImageParameters(temp, m, model):
 
 
 def dust_weighting(temp, model):
-    """Include the dustWeights parameters according to includeDust.
-    If dust is included, assume equal weighting. TODO: EXPERIMENTAL."""
-    temp.append('\tpar->dustWeights[0] = %.1f;\n' % model.includeDust)
-    if model.opr_cp is not None:
-        temp.append('\tpar->dustWeights[1] = %.1f;\n' % model.includeDust)
+    """
+    Include the dustWeights. Parameters according to includeDust.
+    """
+    for i, weight in enumerate(model.dustWeights):
+        temp.append('\tpar->dustWeights[{}] = {};\n'.format(i, weight))
     return
 
 
 def abundance_weighting(temp, model):
-    """Modify densities to account for ortho/para ratio of H2.
-    If an ortho / para ratio is specified, takes density[0] to be n(oH2) and
-    density[1] to be n(pH2). We set MolWeights = 1.0 for both densities as we
-    want to take into account both collision partners equally:
-
-        n(mol) = x(mol) * (w_0 * n(oH2) + w_1 * n(pH2)),
-
-    thus so long as n(oH2) and n(pH2) are correctly specified in the density
-    function, w_0 = w_1 = 1.0. The same goes for the dust. TODO: Include
-    other collision partners. If only considered H2, collPartIds[0] is H2
-    Assume that collPartIds[0] is ortho-H2 and collPartIds[1] is para-H2.
     """
-    if model.opr_cp is None:
-        temp.append('\tpar->collPartIds[0] = CP_H2;\n')
-        temp.append('\tpar->nMolWeights[0] = 1.0;\n')
-    else:
-        temp.append('\tpar->collPartIds[0] = CP_o_H2;\n')
-        temp.append('\tpar->collPartIds[1] = CP_p_H2;\n')
-        temp.append('\tpar->nMolWeights[0] = 1.0;\n')
-        temp.append('\tpar->nMolWeights[1] = 1.0;\n')
+    Include the collisional partner IDs and their associated weights.
+    Given that we work with an input of n(H2), the weights for all 
+    should be 1.0.
+    """
+    for i, cId in enumerate(model.collpartIds):
+        temp.append('\tpar->collPartIds[{}] = {};\n'.format(i, cId))
+    for i, weight in enumerate(model.nMolWeights):
+        temp.append('\tpar->nMolWeights[{}] = {};\n'.format(i, weight))
     return
 
 
@@ -172,23 +161,21 @@ def writeFindValue(temp, model):
 
 
 def writeAbundance(temp, model):
-    """Molecular abundances. If 'abund' is a string, assume an array name, but
+    """
+    Molecular abundances. If 'abund' is a string, assume an array name, but
     if it is a float, assume a homogeneous rescaling. Also include a depletion
     factor through 'depletion'.
     """
-
     temp.append('void abundance(double x, double y, double z,')
     temp.append(' double *abundance) {\n\n')
     writeCoords(temp, model)
-
+    temp.append('\tabundance[0] = ')
     if type(model.abund) is str:
-        temp.append('\tabundance[0] = findvalue(c1, c2, c3, %s);\n' %
-                    model.abund)
+        temp.append('findvalue(c1, c2, c3, %s);\n' % model.abund)
     elif type(model.abund) is float:
-        temp.append('\tabundance[0] = %.3e;\n' % float(model.abund))
+        temp.append('%.3e;\n' % float(model.abund))
     else:
         raise TypeError()
-
     temp.append('\tabundance[0] *= %.3e;\n' % model.depletion)
     temp.append('\tif (abundance[0] < 0.){\n\t\tabundance[0] = 0.;\n\t}\n')
     temp.append('\n}\n\n\n')
@@ -196,37 +183,29 @@ def writeAbundance(temp, model):
 
 
 def writeDensity(temp, model):
-    """Write the molecular densities. Currently assumes 'dens' is H2 density.
-    If an opr_cp value is given, we include density[1] and have density[0]
-    and density[1] as n(oH2) and n(pH2) respectively.
+    """
+    Write the molecular densities. Currently assumes 'dens' is H2 density.
+    If an opr value is given, we include a second density array and have 
+    density[0] and density[1] as n(oH2) and n(pH2) respectively.
     """
     temp.append('void density(double x, double y,')
     temp.append('double z, double *density) {\n\n')
     writeCoords(temp, model)
-    rescaleDensity(temp, model)
+    for i, rescale in enumerate(model.opr):
+        temp.append('\tdensity[%d] = %.2f *' % (i, rescale))
+        temp.append(' findvalue(c1, c2, c3, %s);\n' % model.dens)
+        temp.append('\tif (density[%d] < 1e-30)' % i)
+        temp.append(' {\n\t\tdensity[%d] = 1e-30;\n\t}\n\n' % i) 
     temp.append('}\n\n\n')
     return
 
 
-def rescaleDensity(temp, model):
-    """Rescale density[0] and density[1] to account for ortho/para H2."""
-    if model.opr_cp is None:
-        return
-    x = np.ones(2)
-    x[0] = model.opr_cp / (1. + model.opr_cp)
-    x[1] = 1. / (1. + model.opr_cp)
-    for i in range(2):
-        temp.append('\tdensity[%d] = %.2f *' % (i, x[i]))
-        temp.append(' findvalue(c1, c2, c3, %s);\n' % model.dens)
-        temp.append('\tif (density[%d] < 1e-30)' % i)
-        temp.append(' {\n\t\tdensity[%d] = 1e-30;\n\t}\n\n' % i)
-    return
-
-
 def writeRandomVelocities(temp, model):
-    """Include the mirco-turbulence parameter. This can be either in m/s,
+    """
+    Include the mirco-turbulence parameter. This can be either in m/s,
     model.dopplertype = 'absolute', or a fraction of the local soundspeed,
-    model.dopplertyle = 'mach'. """
+    model.dopplertyle = 'mach'.
+    """
     temp.append('void doppler(double x, double y,')
     temp.append('double z, double *doppler) {\n\n')
     writeCoords(temp, model)
@@ -292,13 +271,13 @@ def writeDustTemperature(temp, model):
     if type(model.dtemp) is float:
         temp.append('\ttemperature[1] = ')
         temp.append('%.3f * temperature[0];\n' % model.dtemp)
-        temp.append('\tif (temperature[1] < 2.73)')
-        temp.append('{temperature[1] = 2.73;}\n')
+        temp.append('\tif (temperature[1] < 0.)')
+        temp.append('{temperature[1] = 0.;}\n')
     elif model.dtemp is not None:
         temp.append('\ttemperature[1] = ')
         temp.append('findvalue(c1, c2, c3, %s);\n' % model.dtemp)
-        temp.append('\tif (temperature[1] < 2.73) ')
-        temp.append('{\n\t\ttemperature[1] = 2.73;\n\t}\n')
+        temp.append('\tif (temperature[1] < 0.0) ')
+        temp.append('{\n\t\ttemperature[1] = 0.0;\n\t}\n')
     return
 
 
