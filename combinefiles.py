@@ -44,10 +44,10 @@ def averageModels(model):
                     if model.nmodels > 1:
                         hdu = fits.open(fn)
                         avg = [fits.getdata(fmt_fn(m, i, p, a, t))
-                            for m in range(model.nmodels)]
+                               for m in range(model.nmodels)]
                         getNoise(avg, i, p, a, t, model)
                         hdu[0].data = np.average(avg, axis=0)
-                        hdu.writeto(fn, clobber=True)
+                        hdu.writeto(fn, overwrite=True)
                     writeFitsHeader(fn, model, i, p, a)
     return
 
