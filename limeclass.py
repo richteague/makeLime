@@ -1,3 +1,7 @@
+"""
+Set all the parameters for running LIME models. Part of the makeLIME package.
+"""
+
 import os
 import headerclass as header
 import lamdaclass as rates
@@ -34,7 +38,7 @@ class model:
         self.pIntensity = float(kwargs.get('pIntensity', 1e5))
         self.sinkPoints = float(kwargs.get('sinkPoints', 3e3))
         if self.sinkPoints > self.pIntensity:
-            print "Warning: sinkPoints > pIntensity."
+            print("Warning: sinkPoints > pIntensity.")
 
         self.sampling = int(kwargs.get('sampling', 2))
         if self.sampling not in [0, 1, 2]:
@@ -99,8 +103,7 @@ class model:
 
         self.nMolWeights = np.array([1.0 for cId in self.collpartIds])
         self.dustWeights = np.array([1.0 for cId in self.collpartIds])
-      
- 
+
         self.traceRayAlgorithm = int(kwargs.get('traceRayAlgorithm', 0))
         if self.traceRayAlgorithm > 1:
             raise ValueError('traceRayAlgorithm must be 0 or 1.')
@@ -118,7 +121,7 @@ class model:
         if self.unit not in [0, 1, 2, 3]:
             raise ValueError("unit must be 0, 1, 2 or 3.")
 
-        # We want to remove any directory before the filename, 
+        # We want to remove any directory before the filename,
         # and make sure that there's no extension on the end.
 
         self.name = kwargs.get('name', self.header.fn[:-2])
@@ -242,7 +245,6 @@ class model:
             self.dtemp = 0.0
         return
 
-
     def checkTypes(self, val, types):
         """Check the array names are valid."""
         if not (type(val) in types or val in types):
@@ -250,7 +252,6 @@ class model:
         elif (type(val) is str and val not in self.header.arrnames):
             raise ValueError('{} not found in {}'.format(val, self.header.fn))
         return
-
 
     def typestr(self, val, types):
         """Format a string for output."""
@@ -274,11 +275,9 @@ class model:
                 string += '.'
         return string
 
-
     def checkexistance(self, fn, folder):
         """Check if fn is in the specified folder."""
         return os.path.isfile(folder + fn)
-
 
     def verifymoldatfile(self, moldatfile):
         """Verify the collisional rates exist."""
