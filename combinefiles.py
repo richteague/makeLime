@@ -22,7 +22,7 @@ def resampleVelocities(model):
         data = [np.average(data[i:i+model.oversample], axis=0)
                 for i in range(data.shape[0])[::model.oversample]]
         hdu[0].data = np.array(data)
-        hdu.writeto(fn, clobber=True)
+        hdu.writeto(fn, overwrite=True)
     return
 
 
@@ -67,7 +67,7 @@ def writeFitsHeader(filename, model, inc, pa, azi):
     header['NAXIS3'] = data.shape[0]
     header['CDELT3'] = model.velres
     header['CRPIX3'] = (data.shape[0] + 1.) / 2.
-    fits.writeto(filename, data, header, clobber=True)
+    fits.writeto(filename, data, header, overwrite=True)
     return
 
 

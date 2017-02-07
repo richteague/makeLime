@@ -30,8 +30,8 @@ class model:
             raise ValueError('%s not found.' % headerfile)
         self.header = header.headerFile('../' + headerfile)
 
-        self.radius = min(kwargs.get('r_max', 1e10), self.header.rout)
-        self.minScale = max(kwargs.get('r_min', 0.), self.header.rin)
+        self.radius = min(kwargs.get('r_max', 1e10), self.header.rmax)
+        self.minScale = max(kwargs.get('r_min', 0.), self.header.rmin)
         if self.minScale >= self.radius:
             raise ValueError('radius < minScale')
 
@@ -249,7 +249,7 @@ class model:
         """Check the array names are valid."""
         if not (type(val) in types or val in types):
             raise TypeError(self.typestr(val, types))
-        elif (type(val) is str and val not in self.header.arrnames):
+        elif (type(val) is str and val not in self.header.anames):
             raise ValueError('{} not found in {}'.format(val, self.header.fn))
         return
 

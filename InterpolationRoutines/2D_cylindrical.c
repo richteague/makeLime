@@ -41,7 +41,7 @@ void findcell(double c1, double c2, int *aidx, int *bidx, int *cidx, int *didx){
                 break;
             }
         }
-        if (c1arr[i] > c1llower) {
+        if (c1arr[i] > c1lower) {
             *bidx = i-1;
             *aidx = i-1;
             break;
@@ -119,8 +119,8 @@ double linterpolate(double c1, double c2, int aidx, int bidx, int cidx,
 
     double c3;
 
-    c3 = c2arr[aidx] * c1arr[didx] / c1arr[aidx]
-    f = (c3 - c2arr[cidx]) / (c2arr[didx - c2arr[cidx]]);
+    c3 = c2arr[aidx] * c1arr[didx] / c1arr[aidx];
+    f = (c3 - c2arr[cidx]) / (c2arr[didx] - c2arr[cidx]);
     B = arr[cidx] * (1. - f) + arr[didx] * f;
     f = (c1 - c1arr[aidx]) / (c1arr[cidx] - c1arr[aidx]);
     return arr[aidx] * (1. - f) + B * f;
