@@ -58,6 +58,12 @@ def makeHeader(path, name=None):
             data[5] = np.where(data[5] != 0.0, 1./data[5], 100.)
         data = np.where(~np.isfinite(data), 0.0, data)
 
+    # Make sure that each column has a cell at the midplane: z = 0.
+
+    for r in np.unique(data[0]):
+        idx = data[1][data[0] == r].argmin()
+        data[1][idx] = 0.0
+
     # Make sure these are the same as in the template file.
     # Note that we skip the average grainsize array.
 

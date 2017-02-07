@@ -1,20 +1,8 @@
+"""
+Read in the LAMDA collisional rate file and parse information.
+"""
+
 import numpy as np
-
-
-def RADEXnames(key):
-
-    # Switch between RADEX names and numbers for collision partners.
-
-    if type(key) is list:
-        return [RADEXnames(k) for k in key]
-    names = np.array(['H2', 'pH2', 'oH2', 'electrons', 'H', 'He', 'H+'])
-    if type(key) is not str:
-        return names[int(key)-1]
-    else:
-        for n in range(names.size):
-            if names[n] == key:
-                return n+1
-    return
 
 
 class ratefile:
@@ -67,3 +55,16 @@ class ratefile:
         self.E_upper = self.transitions[5]
 
         return
+
+
+def RADEXnames(key):
+    """Switch between RADEX names and numbers."""
+    if type(key) is list:
+        return [RADEXnames(k) for k in key]
+    names = np.array(['H2', 'pH2', 'oH2', 'electrons', 'H', 'He', 'H+'])
+    if type(key) is not str:
+        return names[int(key)-1]
+    else:
+        for n in range(names.size):
+            if names[n] == key:
+                return n+1

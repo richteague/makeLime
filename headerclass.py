@@ -1,77 +1,76 @@
-import numpy as np
+"""
+Class to parse the header files used to pass models to LIME.
+This takes in models in either cylindrical coords: (r, z, theta),
+or polar coordinates (r, phi, theta).
+"""
 
-# Class to read in the header files used.
+import numpy as np
 
 
 class headerFile:
 
     def __init__(self, filename, coordsys='cylindrical'):
 
-        if coordsys == ('cylindrical' or coordsys == 'polar'):
+        if coordsys == 'cylindrical' or coordsys == 'polar':
             self.coordsys = coordsys
         else:
             raise NotImplementedError("Only 'cyclindrical' or 'polar'.")
-    
-        self.path = filename.split('/')[0] + '/'
+
         self.fn = filename.split('/')[-1]
+        self.path = filename.replace(self.fn, '')
         if self.fn[-2:] != '.h':
             raise ValueError('headerfile must have a *.h extention.')
 
-        # Read in the header.
+        # Read in the header and parse all the information.
+
         with open(self.path+self.fn) as f:
             self.hdr = f.readlines()
-        self.ncells = self.parsencells()
-        self.arrnames = [self.parsename(ln) for ln in self.hdr]
 
-        c1 = self.arrnames.index('c1arr')
-        c2 = self.arrnames.index('c2arr')
-        if 'c3arr' in self.arrnames:
+        nlines = len(self.hdr)
+        parsed = [self.parse_line(line) for line in self.hdr]
+
+        self.anames = np.array([parsed[i][0] for i in range(nlines)])
+        self.ncells = np.mean([parsed[i][1] for i in range(nlines)])
+        self.params = {name: np.array(parsed[i][2])
+                       for i, name in enumerate(self.anames)}
+
+        # Determine the number of dimensions.
+
+        if 'c1arr' not in self.anames:
+            raise ValueError('No c1arr found.')
+        if 'c2arr' not in self.anames:
+            raise ValueError('No c2arr found.')
+        if 'c3arr' in self.anames:
             self.ndim = 3
         else:
             self.ndim = 2
 
-        i = 0
-        if self.coordsys == 'cylindrical':
-            while self.hdr[c1][i-1] != '{':
-                i += 1
-            self.rvals = self.hdr[c1][i:-3]
-            self.rvals = np.array([float(v) for v in self.rvals.split(', ')])
-            i = 0
-            while self.hdr[c2][i-1] != '{':
-                i += 1
-            self.zvals = self.hdr[c2][i:-3]
-            self.zvals = np.array([float(v) for v in self.zvals.split(', ')])
-            self.rin = np.nanmin(np.hypot(self.rvals, self.zvals))
-            self.rout = np.nanmax(np.hypot(self.rvals, self.zvals))
+        # Estimate the inner and outer radii required for LIME.
 
-        elif self.coordsys == 'polar':
-            while self.hdr[c1][i-1] != '{':
-                i += 1
-            self.rvals = self.hdr[c1][i:-3]
-            self.rvals = np.array([float(v) for v in self.rvals.split(', ')])
-            self.rin = np.nanmin(self.rvals)
-            self.rout = np.nanmax(self.rvals)
-
-        else:
-            raise NotImplementedError("Only 'cylindrical' or 'polar'.")
-
+        self.rmin, self.rmax = self.estimate_grids()
         return
 
-    # Parse the number of cells.
-    def parsencells(self):
-        i = 0
-        while self.hdr[0][i] != ']':
-            if self.hdr[0][i] == '[':
-                j = i
-            i += 1
-        return int(self.hdr[0][j+1:i])
+    def estimate_grids(self):
+        """Return the minimum and maximum radial points [au]."""
+        if self.coordsys == 'polar':
+            return self.params['c1arr'].min(), self.params['c2arr'].max()
+        rvals = np.hypot(self.params['c1arr'], self.params['c2arr'])
+        return rvals.min(), rvals.max()
 
-    # Parse the array name from a line.
-    def parsename(self, ln):
-        i = 0
-        while ln[i] != '[':
-            i += 1
-        j = i
-        while ln[i] != ' ':
-            i -= 1
-        return ln[i+1:j]
+    def parse_line(self, line):
+        """Parses a line."""
+
+        # Splits 'name[ncells]'.
+        namencells = line.split(' ')[3]
+        for i, c in enumerate(namencells):
+            if c == '[':
+                name = namencells[:i]
+                ii = i + 1
+            if c == ']':
+                ncells = int(namencells[ii:i])
+
+        # Splits '{val, val, val, ..., val};'.
+        vals = line.split('{')[-1]
+        vals = vals.split('}')[0]
+        vals = np.array([float(v) for v in vals.split(',')])
+        return name, ncells, vals
