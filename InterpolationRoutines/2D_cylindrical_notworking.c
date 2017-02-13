@@ -70,7 +70,10 @@ void findcell(double c1, double c2, int *aidx, int *bidx, int *cidx, int *didx){
     c1lower = c1arr[i-1];
     c1upper = c1arr[i];
 
-    // First attempt at finding the bounding cells.
+    /*
+        First attempt at finding the bounding cells.
+    */
+
     atemp = -1;
     btemp = -1;
     ctemp = -1;
@@ -82,22 +85,24 @@ void findcell(double c1, double c2, int *aidx, int *bidx, int *cidx, int *didx){
     *cidx = ctemp;
     *didx = dtemp;
 
-    // Cycle through the possible options.
+    /*
+        Cycle through the possible options: (3), (1) and possible (2).
+    */
+
     if (*cidx == *didx) {
-        // Case (3).
         *aidx = -1;
         return;
     } else if (*aidx != *bidx) {
-        // Case (1).
         return;
     } else {
+
         /*
-            Potentially case (2).
-                To check if this is viable, first calculated the maximum value
+            To check if this is viable, first calculated the maximum value
             of the outer column. This allows one to calculate the line between
             the two maximum values (with the first given by aidx = bidx). We can
             then check if the value is less than this.
-                If so, then project the z value onto the outer column and have
+
+            If so, then project the z value onto the outer column and have
             cidx and didx being the cells which bound this value. An altered
             interpolation method can then be used.
         */
@@ -131,77 +136,65 @@ void findcell(double c1, double c2, int *aidx, int *bidx, int *cidx, int *didx){
 
     }
 
-    // Find the bounding cells of the projected value and return.
+    /*
+        Find the bounding cells of the projected value and return.
+    */
+
     double zproj;
     zproj = projected_value(c1, c2, atemp, ctemp);
     verticalbounds(c1upper, zproj, &ctemp, &dtemp);
-    *aidx = -1; // Return this anyway to check all is working.
-    return;
-
+    if (ctemp == dtemp) {
+        *aidx = -1;
+        return;
+    } else {
+        *cidx = ctemp;
+        *didx = dtemp;
+        return;
+    }
 }
 
 
-double linterpolate(double c1, double c2, int aidx, int bidx, int cidx,
-                    int didx, const double arr[NCELLS]) {
+double interpolation(double c1, double c2, int aidx, int bidx, int cidx,
+                     int didx, const double arr[NCELLS]) {
 
     /*
-        Two dimensional, bilinear interpolation.
+        Interpolation routines.
+        If aidx != bidx, then do normal bilinear interpolation, otherwise,
+        do bodged interpolation.
     */
 
     double A, B, f;
-    f = (c2 - c2arr[aidx]) / (c2arr[bidx] - c2arr[aidx]);
-    A = arr[aidx] * (1. - f) + arr[bidx] * f;
-    f = (c2 - c2arr[cidx]) / (c2arr[didx] - c2arr[cidx]);
-    B = arr[cidx] * (1. - f) + arr[didx] * f;
-    f = (c1 - c1arr[aidx]) / (c1arr[cidx] - c1arr[aidx]);
-    return A * (1. - f) + B * f;
-
+    if (aidx != bidx) {
+        f = (c2 - c2arr[aidx]) / (c2arr[bidx] - c2arr[aidx]);
+        A = arr[aidx] * (1. - f) + arr[bidx] * f;
+        f = (c2 - c2arr[cidx]) / (c2arr[didx] - c2arr[cidx]);
+        B = arr[cidx] * (1. - f) + arr[didx] * f;
+        f = (c1 - c1arr[aidx]) / (c1arr[cidx] - c1arr[aidx]);
+        return A * (1. - f) + B * f;
+    } else {
+        A = projected_value(c1, c2, aidx, cidx);
+        f = (A - c2arr[cidx]) / (c2arr[didx] - c2arr[cidx]);
+        B = arr[cidx] * (1. - f) + arr[didx] * f;
+        f = (c1 - c1arr[aidx]) / (c1arr[cidx] - c1arr[aidx]);
+        return arr[aidx] * (1. - f) + B * f;
+    }
 }
-
-
-
-double tripolate(double c1, double c2, int aidx, int cidx, int didx, const double arr[NCELLS]) {
-
-    /*
-        Interpolating the triangular region above the maximum of the inner
-        radial grid, but still within the bounds of the outer grid. aidx
-        specifies the top-most point of the c1lower column, while
-    */
-
-    double A, B, f;
-    double z_proj;
-
-    z_proj = projected_value(c1, c2, aidx, cidx);
-    A = arr[aidx];
-    f = (c2 - c2arr[cidx]) / (c2arr[didx] - c2arr[cidx]);
-    B = arr[cidx] * (1. - f) + arr[didx] * f;
-    f = (c1 - c1arr[aidx]) / (c1arr[cidx] - c1arr[aidx]);
-    return A * (1. - f) + B * f;
-
-}
-
 
 double findvalue(double c1, double c2, double c3, const double arr[NCELLS]){
 
     /*
-        Finds the bounding cells and linearlly interpolates their value.
-        If aidx < 0 then we cannot interpolate this point in the provided model
-        grid.
+        Returns the interpolated value of (c1, c2). If interpolation is not
+        possible then returns -1. This should be caught in the phyiscal
+        properties function.
     */
 
     double value;
     int aidx, bidx, cidx, didx;
-
     findcell(c1, c2, &aidx, &bidx, &cidx, &didx);
-
     if (aidx >= 0) {
-        value = linterpolate(c1, c2, aidx, bidx, cidx, didx, arr);
-        if (value < 0){
-            return -1.;
-        }
+        value = interpolation(c1, c2, aidx, bidx, cidx, didx, arr);
         return value;
     } else {
         return -1.;
     }
-
 }
