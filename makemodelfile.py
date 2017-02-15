@@ -1,7 +1,8 @@
-import os
-import numpy as np
+"""
+Functions to write the model.c file used for LIME.
+"""
 
-# Functions to create the model.c file.
+import os
 
 
 def makeFile(m, model):
@@ -35,7 +36,8 @@ def makeFile(m, model):
 
 
 def writeImageParameters(temp, m, model):
-    """Include the imaging parameters. These should be the variables in the
+    """
+    Include the imaging parameters. These should be the variables in the
     order of the manual. Note that some need to be included.
     """
 
@@ -95,9 +97,8 @@ def dust_weighting(temp, model):
 
 def abundance_weighting(temp, model):
     """
-    Include the collisional partner IDs and their associated weights.
-    Given that we work with an input of n(H2), the weights for all 
-    should be 1.0.
+    Include the collisional partner IDs and their associated weights. Given
+    that we work with an input of n(H2), the weights for all should be 1.0.
     """
     for i, cId in enumerate(model.collpartIds):
         temp.append('\tpar->collPartIds[{}] = {};\n'.format(i, cId))
@@ -107,12 +108,13 @@ def abundance_weighting(temp, model):
 
 
 def writeImageBlock(temp, nimg, m, inc, pa, azi, trans, model):
-    """Write an image block with the given parameters. Use the filename:
+    """
+    Write an image block with the given parameters. Use the filename:
 
         nmodel_inc_pa_azi_trans.fits
 
-    to allow for easier parsing of the different models.
-    Parameters are in the manual order.
+    to allow for easier parsing of the different models. Parameters are in the
+    manual order.
     """
     filename = '%s_%.2f_%.2f_%.2f_%d' % (m, inc, pa, azi, trans)
     imgs = '\timg[%d].' % nimg
@@ -132,7 +134,9 @@ def writeImageBlock(temp, nimg, m, inc, pa, azi, trans, model):
 
 
 def writeCoords(temp, model):
-    """Define the model coordinates for each function."""
+    """
+    Define the model coordinates for each function.
+    """
     if not (model.coordsys is 'cylindrical' and model.ndim is 2):
         raise NotImplementedError
     if model.coordsys is 'cylindrical':
@@ -144,9 +148,9 @@ def writeCoords(temp, model):
 
 
 def writeFindValue(temp, model):
-    """Include the interpolation functions."""
-
-    # TODO: Include 1D models.
+    """
+    Include the interpolation functions. TODO: Include 1D models.
+    """
     if not (model.coordsys is 'cylindrical' and model.ndim is 2):
         raise NotImplementedError
     path = os.path.dirname(__file__)
@@ -185,7 +189,7 @@ def writeAbundance(temp, model):
 def writeDensity(temp, model):
     """
     Write the molecular densities. Currently assumes 'dens' is H2 density.
-    If an opr value is given, we include a second density array and have 
+    If an opr value is given, we include a second density array and have
     density[0] and density[1] as n(oH2) and n(pH2) respectively.
     """
     temp.append('void density(double x, double y,')
@@ -195,7 +199,7 @@ def writeDensity(temp, model):
         temp.append('\tdensity[%d] = %.2f *' % (i, rescale))
         temp.append(' findvalue(c1, c2, c3, %s);\n' % model.dens)
         temp.append('\tif (density[%d] < 1e-30)' % i)
-        temp.append(' {\n\t\tdensity[%d] = 1e-30;\n\t}\n\n' % i) 
+        temp.append(' {\n\t\tdensity[%d] = 1e-30;\n\t}\n\n' % i)
     temp.append('}\n\n\n')
     return
 
@@ -220,7 +224,9 @@ def writeRandomVelocities(temp, model):
 
 
 def writeDopplerMach(temp, model):
-    """Write the doppler function for Mach values."""
+    """
+    Write the doppler function for Mach values.
+    """
     if model.dopplertype != 'mach':
         return
     temp.append('\tdouble val[2];\n')
@@ -230,8 +236,10 @@ def writeDopplerMach(temp, model):
 
 
 def writeGastoDust(temp, model, ming2d=1.):
-    """Write the gas-to-dust ratios. This is relative to n(H2), which is the sum
-    of all density[i] values."""
+    """
+    Write the gas-to-dust ratios. This is relative to n(H2), which is the sum
+    of all density[i] values.
+    """
     if model.g2d is None:
         return
     temp.append('void gasIIdust(double x, double y,')
@@ -247,7 +255,9 @@ def writeGastoDust(temp, model, ming2d=1.):
 
 
 def writeTemperatures(temp, model):
-    """Write the gas and dust temperatures."""
+    """
+    Write the gas and dust temperatures.
+    """
     temp.append('void temperature(double x, double y, double z,')
     temp.append('double *temperature) {\n\n')
     writeCoords(temp, model)
