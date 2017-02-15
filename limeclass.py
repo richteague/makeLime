@@ -57,6 +57,8 @@ class model:
         # runs with multiple models?
 
         self.outputgrid = kwargs.get('outputgrid', False)
+        if self.outputgrid and self.outputgrid[-3:] != '.ds':
+            self.outputgrid = self.outputgrid + '.ds'
 
         # self.returnoputs = kwargs.get('outputfile', False)
         # self.returnbputs = kwargs.get('binoutputfile', False)
