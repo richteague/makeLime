@@ -53,7 +53,9 @@ def averageModels(model):
 
 
 def writeFitsHeader(filename, model, inc, pa, azi):
-    """Include model data in the final .fits file header."""
+    """
+    Include model data in the final .fits file header.
+    """
     data, header = fits.getdata(filename, header=True)
     header['DISTANCE'] = model.distance, 'Distance in parsec.'
     header['CHEMMOD'] = model.header.fn.split('/')[-1], 'Chemical model used.'
@@ -61,9 +63,6 @@ def writeFitsHeader(filename, model, inc, pa, azi):
     header['PA'] = pa, 'Position angle in radians.'
     header['AZI'] = azi, 'Azimuthal angle in radians.'
     header['NMODELS'] = model.nmodels, 'Number of models averaged.'
-
-    # Include the change for over-sampled velocity axis.
-
     header['NAXIS3'] = data.shape[0]
     header['CDELT3'] = model.velres
     header['CRPIX3'] = (data.shape[0] + 1.) / 2.
@@ -72,13 +71,25 @@ def writeFitsHeader(filename, model, inc, pa, azi):
 
 
 def getNoise(avgmodels, i, p, a, t, model):
-    """Estimate the MCMC noise from the model ensemble."""
+    """
+    Estimate the MCMC noise from the model ensemble.
+    """
     if (model.nmodels == 1 or not model.returnnoise):
         return
     noise = np.std(avgmodels, axis=0)
     hdu = fits.open(fmt_fn(1, i, p, a, t))
     hdu.data = noise
     hdu.writeto(fmt_fn(0, i, p, a, t)[:-5]+'_noise.fits')
+    return
+
+
+def moveOutputs(model):
+    """
+    Move the output grid. As they all have the same name, there should only be
+    one in the case of multiple models being run.
+    """
+    fn = model.outputgrid
+    os.system('mv %s %s%s' % (fn, model.directory, fn))
     return
 
 

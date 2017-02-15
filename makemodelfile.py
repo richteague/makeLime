@@ -50,22 +50,13 @@ def writeImageParameters(temp, m, model):
     temp.append('\tpar->tcmb = %.5f;\n' % model.tcmb)
     temp.append('\tpar->moldatfile[0] = "%s";\n' % model.moldatfile)
     temp.append('\tpar->dust = "%s";\n' % model.dust)
-
-    if model.returnoputs:
-        s = 'outputfile_%d.out' % (m)
-        temp.append('\tpar->outputfile = "%s";\n' % s)
-    if model.returnbputs:
-        s = 'binoutputfile_%d.out' % (m)
-        temp.append('\tpar->binoutputfile = "%s";\n' % s)
-    if model.returngrids:
-        s = 'gridfile_s%s_%d.out' % (model.name, m)
-        temp.append('\tpar->gridfile = "%s";\n' % s)
-
     temp.append('\tpar->lte_only = %d;\n' % model.lte_only)
     temp.append('\tpar->blend = %d;\n' % model.blend)
     temp.append('\tpar->antialias = %d;\n' % model.antialias)
     temp.append('\tpar->traceRayAlgorithm = %d;\n' % model.traceRayAlgorithm)
     temp.append('\tpar->nThreads = %d;\n' % model.nThreads)
+    if model.outputgrid:
+        temp.append('\tpar->gridOutFiles[3] = "%s";\n' % model.outputgrid)
 
     # Include the weighting factors included in LIME 1.6.
 

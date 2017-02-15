@@ -51,12 +51,16 @@ class model:
         if not self.checkexistance(self.dust, self.auxfiles):
             raise ValueError('%s not found.' % self.dust)
 
-        # Options to turn on the generation of additional output files.
-        # These are only booleans as the filenames are automatic.
+        # Options to turn on the generation of additional output files. There
+        # are four different stages of output. Here we just consider the final
+        # one. TODO: How do we deal with all the differeent output files from
+        # runs with multiple models?
 
-        self.returnoputs = kwargs.get('outputfile', False)
-        self.returnbputs = kwargs.get('binoutputfile', False)
-        self.returngrids = kwargs.get('gridfile', False)
+        self.outputgrid = kwargs.get('outputgrid', False)
+
+        # self.returnoputs = kwargs.get('outputfile', False)
+        # self.returnbputs = kwargs.get('binoutputfile', False)
+        # self.returngrids = kwargs.get('gridfile', False)
 
         self.restart = kwargs.get('restart', None)
         if self.restart is not None:
