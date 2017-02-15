@@ -262,6 +262,8 @@ def writeGasTemperature(temp, model):
     """Include the gas temperature."""
     temp.append('\ttemperature[0] = ')
     temp.append('findvalue(c1, c2, c3, %s);\n' % model.temp)
+    if model.rescaletemp:
+        temp.append('\ttemperature[0] *= %.3f;\n' & model.rescaletemp)
     temp.append('\tif (temperature[0] < 2.73) ')
     temp.append('{\n\t\ttemperature[0] = 2.73;\n\t}\n\n')
     return
@@ -290,11 +292,11 @@ def writeVelocityStructure(temp, model):
 
     temp.append('void velocity(double x, double y,')
     temp.append('double z, double *velocity) {\n\n')
-    temp.append('if (sqrt(x*x + y*y + z*z) == 0.0){\n')
-    temp.append('\tvelocity[0] = 0.0;\n')
-    temp.append('\tvelocity[1] = 0.0;\n')
-    temp.append('\tvelocity[2] = 0.0;\n')
-    temp.append('\t return;\n')
+    temp.append('\tif (sqrt(x*x + y*y + z*z) == 0.0){\n')
+    temp.append('\t\tvelocity[0] = 0.0;\n')
+    temp.append('\t\tvelocity[1] = 0.0;\n')
+    temp.append('\t\tvelocity[2] = 0.0;\n')
+    temp.append('\t\t return;\n')
     temp.append('}\n\n')
     temp.append('\tvelocity[0] = sqrt(6.67e-11 * ')
     temp.append('%.3f * 2e30 / ' % model.stellarmass)

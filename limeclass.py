@@ -185,6 +185,8 @@ class model:
         self.temp = kwargs.get('temp', 'temp')
         self.dtemp = kwargs.get('dtemp', None)
 
+        self.rescaletemp = kwargs.get('rescaletemp', False)
+
         self.checkTypes(self.dens, [str])
         self.checkTypes(self.abund, [str, float])
         self.checkTypes(self.temp, [str])
