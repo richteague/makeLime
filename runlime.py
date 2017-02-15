@@ -94,14 +94,17 @@ def run(headerfile, moldatfile, **kwargs):
     else:
         print 'All instances complete.\n'
 
-    # Combine the model ensemble.
+    # Combine the model ensemble. Here we remove all the output grids. As they
+    # all have the same name, they will just be overwritten.
+
     comb.resampleVelocities(model)
     comb.averageModels(model)
     comb.moveModels(model)
     comb.moveModels(model, suffix='_noise')
-    comb.combineGridfiles(model)
-    comb.combinePopfiles(model)
-    comb.combineBinpopfiles(model)
+    comb.moveOutputs(model)
+    # comb.combineGridfiles(model)
+    # comb.combinePopfiles(model)
+    # comb.combineBinpopfiles(model)
 
     # Clean up.
     os.chdir('../')
