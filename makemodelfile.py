@@ -290,7 +290,7 @@ def writeVelocityStructure(temp, model):
 
     temp.append('void velocity(double x, double y,')
     temp.append('double z, double *velocity) {\n\n')
-    temp.append('if sqrt(x*x + y*y + z*z == 0.0){\n')
+    temp.append('if (sqrt(x*x + y*y + z*z) == 0.0){\n')
     temp.append('\tvelocity[0] = 0.0;\n')
     temp.append('\tvelocity[1] = 0.0;\n')
     temp.append('\tvelocity[2] = 0.0;\n')
