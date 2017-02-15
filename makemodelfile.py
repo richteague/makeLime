@@ -189,8 +189,8 @@ def writeDensity(temp, model):
     for i, rescale in enumerate(model.opr):
         temp.append('\tdensity[%d] = %.2f *' % (i, rescale))
         temp.append(' findvalue(c1, c2, c3, %s);\n' % model.dens)
-        temp.append('\tif (density[%d] < 1e-30)' % i)
-        temp.append(' {\n\t\tdensity[%d] = 1e-30;\n\t}\n\n' % i)
+        temp.append('\tif (density[%d] < 1e3)' % i)
+        temp.append(' {\n\t\tdensity[%d] = 1e3;\n\t}\n\n' % i)
     temp.append('}\n\n\n')
     return
 

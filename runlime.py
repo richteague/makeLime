@@ -32,7 +32,7 @@ def run(headerfile, moldatfile, **kwargs):
 
     # Start the clock to time the running of models.
     print '\n'
-    waittime = kwargs.get('wait', 20.)
+    waittime = kwargs.get('wait', 60.)
     t0 = time.time()
 
     # Create the temporary folder to work in and move there.
