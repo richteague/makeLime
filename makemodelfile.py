@@ -297,7 +297,7 @@ def writeVelocityStructure(temp, model):
     temp.append('\t\tvelocity[1] = 0.0;\n')
     temp.append('\t\tvelocity[2] = 0.0;\n')
     temp.append('\t\t return;\n')
-    temp.append('}\n\n')
+    temp.append('\t}\n\n')
     temp.append('\tvelocity[0] = sqrt(6.67e-11 * ')
     temp.append('%.3f * 2e30 / ' % model.stellarmass)
     temp.append('sqrt(x*x + y*y + z*z));\n')
