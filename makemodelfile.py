@@ -263,7 +263,7 @@ def writeGasTemperature(temp, model):
     temp.append('\ttemperature[0] = ')
     temp.append('findvalue(c1, c2, c3, %s);\n' % model.temp)
     if model.rescaletemp:
-        temp.append('\ttemperature[0] *= %.3f;\n' & model.rescaletemp)
+        temp.append('\ttemperature[0] *= %.3f;\n' % model.rescaletemp)
     temp.append('\tif (temperature[0] < 2.73) ')
     temp.append('{\n\t\ttemperature[0] = 2.73;\n\t}\n\n')
     return
