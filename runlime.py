@@ -56,7 +56,6 @@ def run(headerfile, moldatfile, **kwargs):
     for m in range(model.nmodels):
         print 'Running model %d of %d.' % (m+1, model.nmodels)
         make.makeFile(m, model)
-        cmd = 'nohup lime -n -f model_%d.c >nohup_%d.out 2>&1 &' % (m, m)
         cmd = 'screen -d -m lime -n model_%d.c' % m
         os.system(cmd)
         time.sleep(waittime)
