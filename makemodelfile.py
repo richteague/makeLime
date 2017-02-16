@@ -221,7 +221,7 @@ def writeDopplerMach(temp, model):
     if model.dopplertype != 'mach':
         return
     temp.append('\tdouble val[2];\n')
-    temp.append('\ttemperature(x, y, z, &val[2]);\n')
+    temp.append('\ttemperature(x, y, z, &val);\n')
     temp.append('\t*doppler *= sqrt(KBOLTZ * val[0] / 2.34 / AMU);\n')
     return
 
