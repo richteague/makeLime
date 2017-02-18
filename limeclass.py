@@ -251,6 +251,10 @@ class model:
             self.nMolWeights = np.append(self.nMolWeights, 0.)
             self.dustWeights = np.append(self.dustWeights * 0., 1.)
             self.dtemp = 0.0
+
+        # niceness. If selected change the niceness of the runs.
+        self.niceness = kwargs.get('niceness', False)
+
         return
 
     def checkTypes(self, val, types):

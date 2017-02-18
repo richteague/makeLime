@@ -56,7 +56,10 @@ def run(headerfile, moldatfile, **kwargs):
     for m in range(model.nmodels):
         print 'Running model %d of %d.' % (m+1, model.nmodels)
         make.makeFile(m, model)
-        cmd = 'screen -d -m lime -n model_%d.c' % m
+        if model.niceness:
+            cmd = 'nice -n %d screen -d -m lime -n model_%d.c' % (model.niceness, m)
+        else:
+            cmd = 'screen -d -m lime -n model_%d.c' % m
         os.system(cmd)
         time.sleep(waittime)
 
