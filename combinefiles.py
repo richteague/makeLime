@@ -77,8 +77,8 @@ def getNoise(avgmodels, i, p, a, t, model):
     if (model.nmodels == 1 or not model.returnnoise):
         return
     noise = np.std(avgmodels, axis=0)
-    hdu = fits.open(fmt_fn(1, i, p, a, t))
-    hdu.data = noise
+    hdu = fits.open(fmt_fn(0, i, p, a, t))
+    hdu[0].data = noise
     hdu.writeto(fmt_fn(0, i, p, a, t)[:-5]+'_noise.fits')
     return
 
